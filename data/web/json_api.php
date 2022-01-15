@@ -455,6 +455,7 @@ if (isset($_GET['query'])) {
                 'type' => 'error',
                 'msg' => 'Cannot find matching credentialIds'
             )));
+            exit;
           }
 
           $getArgs = $WebAuthn->getGetArgs($cids, 30, true, true, true, true, $GLOBALS['FIDO2_UV_FLAG_LOGIN']);
@@ -499,6 +500,7 @@ if (isset($_GET['query'])) {
                 'type' => 'error',
                 'msg' => 'Cannot find matching credentialIds'
             )));
+            exit;
           }
 
           $getArgs = $WebAuthn->getGetArgs($cids, 30, true, true, true, true, $GLOBALS['WEBAUTHN_UV_FLAG_LOGIN']);
