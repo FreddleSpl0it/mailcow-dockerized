@@ -8,7 +8,6 @@ if (!isset($_SESSION['mailcow_cc_role']) || $_SESSION['mailcow_cc_role'] != "adm
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/inc/header.inc.php';
 $_SESSION['return_to'] = $_SERVER['REQUEST_URI'];
-$solr_status = (preg_match("/^([yY][eE][sS]|[yY])+$/", $_ENV["SKIP_SOLR"])) ? false : solr_status();
 $clamd_status = (preg_match("/^([yY][eE][sS]|[yY])+$/", $_ENV["SKIP_CLAMD"])) ? false : true;
 
 $js_minifier->add('/web/js/site/debug.js');
@@ -20,7 +19,6 @@ $vmail_df = explode(',', (string)json_decode(docker('post', 'dovecot-mailcow', '
 // containers
 $containers = (array) docker('info');
 if ($clamd_status === false) unset($containers['clamd-mailcow']);
-if ($solr_status === false) unset($containers['solr-mailcow']);
 ksort($containers);
 foreach ($containers as $container => $container_info) {
   date_default_timezone_set('UTC');
@@ -48,8 +46,6 @@ $template = 'debug.twig';
 $template_data = [
   'log_lines' => getenv('LOG_LINES'),
   'vmail_df' => $vmail_df,
-  'solr_status' => $solr_status,
-  'solr_uptime' => round($solr_status['status']['dovecot-fts']['uptime'] / 1000 / 60 / 60),
   'clamd_status' => $clamd_status,
   'containers' => $containers,
   'lang_admin' => json_encode($lang['admin']),
