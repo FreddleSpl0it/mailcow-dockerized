@@ -30,7 +30,7 @@ $globalVariables = [
     'git_project_url' => $GLOBALS['MAILCOW_GIT_URL']
   ),
   'js_path' => '/cache/'.basename($JSPath),
-  'pending_tfa_method' => @$_SESSION['pending_tfa_method'],
+  'pending_tfa_methods' => @$_SESSION['pending_tfa_methods'],
   'pending_mailcow_cc_username' => @$_SESSION['pending_mailcow_cc_username'],
   'lang_footer' => json_encode($lang['footer']),
   'lang_acl' => json_encode($lang['acl']),

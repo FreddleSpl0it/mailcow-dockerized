@@ -1,6 +1,6 @@
 <?php
 if (isset($_POST["verify_tfa_login"])) {
-  if (verify_tfa_login($_SESSION['pending_mailcow_cc_username'], $_POST, $WebAuthn)) {
+  if (verify_tfa_login($_SESSION['pending_mailcow_cc_username'], $_POST)) {
     $_SESSION['mailcow_cc_username'] = $_SESSION['pending_mailcow_cc_username'];
     $_SESSION['mailcow_cc_role'] = $_SESSION['pending_mailcow_cc_role'];
     unset($_SESSION['pending_mailcow_cc_username']);
@@ -47,22 +47,22 @@ if (isset($_POST["login_user"]) && isset($_POST["pass_user"])) {
 	elseif ($as == "user") {
 		$_SESSION['mailcow_cc_username'] = $login_user;
 		$_SESSION['mailcow_cc_role'] = "user";
-    $http_parameters = explode('&', $_SESSION['index_query_string']);
-    unset($_SESSION['index_query_string']);
-    if (in_array('mobileconfig', $http_parameters)) {
-      if (in_array('only_email', $http_parameters)) {
-        header("Location: /mobileconfig.php?email_only");
-        die();
-      }
-      header("Location: /mobileconfig.php");
-      die();
-    }
+        $http_parameters = explode('&', $_SESSION['index_query_string']);
+        unset($_SESSION['index_query_string']);
+        if (in_array('mobileconfig', $http_parameters)) {
+            if (in_array('only_email', $http_parameters)) {
+                header("Location: /mobileconfig.php?email_only");
+                die();
+            }
+            header("Location: /mobileconfig.php");
+            die();
+        }
 		header("Location: /user");
 	}
 	elseif ($as != "pending") {
-    unset($_SESSION['pending_mailcow_cc_username']);
-    unset($_SESSION['pending_mailcow_cc_role']);
-    unset($_SESSION['pending_tfa_method']);
+        unset($_SESSION['pending_mailcow_cc_username']);
+        unset($_SESSION['pending_mailcow_cc_role']);
+        unset($_SESSION['pending_tfa_method']);
 		unset($_SESSION['mailcow_cc_username']);
 		unset($_SESSION['mailcow_cc_role']);
 	}

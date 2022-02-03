@@ -830,11 +830,15 @@ function check_login($user, $pass, $app_passwd_data = false) {
   $stmt->execute(array(':user' => $user));
   $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
   foreach ($rows as $row) {
+    // verify password
     if (verify_hash($row['password'], $pass)) {
-      if (get_tfa($user)['name'] != "none") {
+      // check for tfa authenticators
+      $authenticators = get_tfa($user);
+      if (isset($authenticators['authenticators']) && is_array($authenticators['authenticators'])) {
+        // active tfa authenticators found, set pending user login
         $_SESSION['pending_mailcow_cc_username'] = $user;
         $_SESSION['pending_mailcow_cc_role'] = "admin";
-        $_SESSION['pending_tfa_method'] = get_tfa($user)['name'];
+        $_SESSION['pending_tfa_methods'] = $authenticators['authenticators'];
         unset($_SESSION['ldelay']);
         $_SESSION['return'][] =  array(
           'type' => 'info',
@@ -842,8 +846,7 @@ function check_login($user, $pass, $app_passwd_data = false) {
           'msg' => 'awaiting_tfa_confirmation'
         );
         return "pending";
-      }
-      else {
+      } else {
         unset($_SESSION['ldelay']);
         // Reactivate TFA if it was set to "deactivate TFA for next login"
         $stmt = $pdo->prepare("UPDATE `tfa` SET `active`='1' WHERE `username` = :user");
@@ -1487,7 +1490,7 @@ function unset_tfa_key($_data) {
     return false;
   }
 }
-function get_tfa($username = null) {
+function get_tfa($username = null, $key_id = null) {
   global $pdo;
   if (isset($_SESSION['mailcow_cc_username'])) {
     $username = $_SESSION['mailcow_cc_username'];
@@ -1495,92 +1498,115 @@ function get_tfa($username = null) {
   elseif (empty($username)) {
     return false;
   }
-  $stmt = $pdo->prepare("SELECT * FROM `tfa`
-      WHERE `username` = :username AND `active` = '1'");
-  $stmt->execute(array(':username' => $username));
-  $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-  if (isset($row["authmech"])) {
-    switch ($row["authmech"]) {
-      case "yubi_otp":
-        $data['name'] = "yubi_otp";
-        $data['pretty'] = "Yubico OTP";
-        $stmt = $pdo->prepare("SELECT `id`, `key_id`, RIGHT(`secret`, 12) AS 'modhex' FROM `tfa` WHERE `authmech` = 'yubi_otp' AND `username` = :username");
-        $stmt->execute(array(
-          ':username' => $username,
-        ));
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        while($row = array_shift($rows)) {
-          $data['additional'][] = $row;
-        }
-        return $data;
-      break;
-      // u2f - deprecated, should be removed
-      case "u2f":
-        $data['name'] = "u2f";
-        $data['pretty'] = "Fido U2F";
-        $stmt = $pdo->prepare("SELECT `id`, `key_id` FROM `tfa` WHERE `authmech` = 'u2f' AND `username` = :username");
-        $stmt->execute(array(
-          ':username' => $username,
-        ));
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        while($row = array_shift($rows)) {
-          $data['additional'][] = $row;
-        }
-        return $data;
-      break;
-      case "hotp":
-        $data['name'] = "hotp";
-        $data['pretty'] = "HMAC-based OTP";
-        return $data;
-      break;
-      case "totp":
-        $data['name'] = "totp";
-        $data['pretty'] = "Time-based OTP";
-        $stmt = $pdo->prepare("SELECT `id`, `key_id`, `secret` FROM `tfa` WHERE `authmech` = 'totp' AND `username` = :username");
-        $stmt->execute(array(
-          ':username' => $username,
-        ));
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        while($row = array_shift($rows)) {
-          $data['additional'][] = $row;
-        }
-        return $data;
-      break;
-      case "webauthn":
-        $data['name'] = "webauthn";
-        $data['pretty'] = "WebAuthn";
-        $stmt = $pdo->prepare("SELECT `id`, `key_id` FROM `tfa` WHERE `authmech` = 'webauthn' AND `username` = :username");
-        $stmt->execute(array(
-          ':username' => $username,
-        ));
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        while($row = array_shift($rows)) {
-          $data['additional'][] = $row;
-        }
-        return $data;
-      break;
-      default:
+  if (!isset($key_id)){
+    // fetch all tfa methods - just get information about possible authenticators
+    $stmt = $pdo->prepare("SELECT `key_id`, `authmech` FROM `tfa`
+        WHERE `username` = :username AND `active` = '1'");
+    $stmt->execute(array(':username' => $username));
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+ 
+    // no tfa methods found
+    if (count($results) == 0) {
         $data['name'] = 'none';
         $data['pretty'] = "-";
         return $data;
-      break;
     }
-  }
-  else {
-    $data['name'] = 'none';
-    $data['pretty'] = "-";
+
+    $data['authenticators'] = $results;
     return $data;
-  }
+  } else {
+    // fetch specific authenticator details by key_id
+    $stmt = $pdo->prepare("SELECT * FROM `tfa`
+    WHERE `username` = :username AND `active` = '1'");
+    $stmt->execute(array(':username' => $username));
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (isset($row["authmech"])) {
+        switch ($row["authmech"]) {
+          case "yubi_otp":
+            $data['name'] = "yubi_otp";
+            $data['pretty'] = "Yubico OTP";
+            $stmt = $pdo->prepare("SELECT `id`, `key_id`, RIGHT(`secret`, 12) AS 'modhex' FROM `tfa` WHERE `authmech` = 'yubi_otp' AND `username` = :username");
+            $stmt->execute(array(
+              ':username' => $username,
+            ));
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            while($row = array_shift($rows)) {
+              $data['additional'][] = $row;
+            }
+            return $data;
+          break;
+          // u2f - deprecated, should be removed
+          case "u2f":
+            $data['name'] = "u2f";
+            $data['pretty'] = "Fido U2F";
+            $stmt = $pdo->prepare("SELECT `id`, `key_id` FROM `tfa` WHERE `authmech` = 'u2f' AND `username` = :username");
+            $stmt->execute(array(
+              ':username' => $username,
+            ));
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            while($row = array_shift($rows)) {
+              $data['additional'][] = $row;
+            }
+            return $data;
+          break;
+          case "hotp":
+            $data['name'] = "hotp";
+            $data['pretty'] = "HMAC-based OTP";
+            return $data;
+          break;
+          case "totp":
+            $data['name'] = "totp";
+            $data['pretty'] = "Time-based OTP";
+            $stmt = $pdo->prepare("SELECT `id`, `key_id`, `secret` FROM `tfa` WHERE `authmech` = 'totp' AND `username` = :username");
+            $stmt->execute(array(
+              ':username' => $username,
+            ));
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            while($row = array_shift($rows)) {
+              $data['additional'][] = $row;
+            }
+            return $data;
+          break;
+          case "webauthn":
+            $data['name'] = "webauthn";
+            $data['pretty'] = "WebAuthn";
+            $stmt = $pdo->prepare("SELECT `id`, `key_id` FROM `tfa` WHERE `authmech` = 'webauthn' AND `username` = :username");
+            $stmt->execute(array(
+              ':username' => $username,
+            ));
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            while($row = array_shift($rows)) {
+              $data['additional'][] = $row;
+            }
+            return $data;
+          break;
+          default:
+            $data['name'] = 'none';
+            $data['pretty'] = "-";
+            return $data;
+          break;
+        }
+      }
+      else {
+        $data['name'] = 'none';
+        $data['pretty'] = "-";
+        return $data;
+      }
+    }
 }
-function verify_tfa_login($username, $_data, $WebAuthn) {
+function verify_tfa_login($username, $_data) {
+    // $_data["selected_tfa_authenticator"] should contain the key_id
+    // TODO: verify tfa login with selected authenticator
     global $pdo;
     global $yubi;
     global $u2f;
     global $tfa;
+    global $WebAuthn;
     $stmt = $pdo->prepare("SELECT `authmech` FROM `tfa`
-        WHERE `username` = :username AND `active` = '1'");
-    $stmt->execute(array(':username' => $username));
+        WHERE `username` = :username AND `key_id` = :key_id AND `active` = '1'");
+    $stmt->execute(array(':username' => $username, ':key_id' => $_data['key_id']));
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
     switch ($row["authmech"]) {

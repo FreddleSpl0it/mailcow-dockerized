@@ -176,7 +176,7 @@ function recursiveBase64StrToArrayBuffer(obj) {
     {% endfor %}
 
     // Confirm TFA modal
-  {% if pending_tfa_method %}
+  {% if pending_tfa_methods %}
     $('#ConfirmTFAModal').modal({
       backdrop: 'static',
       keyboard: false
