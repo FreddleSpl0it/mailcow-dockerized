@@ -834,11 +834,11 @@ function check_login($user, $pass, $app_passwd_data = false) {
     if (verify_hash($row['password'], $pass)) {
       // check for tfa authenticators
       $authenticators = get_tfa($user);
-      if (isset($authenticators['authenticators']) && is_array($authenticators['authenticators'])) {
+      if (isset($authenticators['additional']) && is_array($authenticators['additional'])) {
         // active tfa authenticators found, set pending user login
         $_SESSION['pending_mailcow_cc_username'] = $user;
         $_SESSION['pending_mailcow_cc_role'] = "admin";
-        $_SESSION['pending_tfa_methods'] = $authenticators['authenticators'];
+        $_SESSION['pending_tfa_methods'] = $authenticators['additional'];
         unset($_SESSION['ldelay']);
         $_SESSION['return'][] =  array(
           'type' => 'info',
@@ -1268,9 +1268,6 @@ function set_tfa($_data) {
     case "webauthn":
         $key_id = (!isset($_data["key_id"])) ? 'unidentified' : $_data["key_id"];
 
-        $stmt = $pdo->prepare("DELETE FROM `tfa` WHERE `username` = :username AND `authmech` != 'webauthn'");
-        $stmt->execute(array(':username' => $username));
-
         $stmt = $pdo->prepare("INSERT INTO `tfa` (`username`, `key_id`, `authmech`, `keyHandle`, `publicKey`, `certificate`, `counter`, `active`)
         VALUES (?, ?, 'webauthn', ?, ?, ?, ?, '1')");
         $stmt->execute(array(
@@ -1510,10 +1507,11 @@ function get_tfa($username = null, $key_id = null) {
     if (count($results) == 0) {
         $data['name'] = 'none';
         $data['pretty'] = "-";
+        $data['additional'] = array();
         return $data;
     }
 
-    $data['authenticators'] = $results;
+    $data['additional'] = $results;
     return $data;
   } else {
     // fetch specific authenticator details by key_id
@@ -1596,13 +1594,14 @@ function get_tfa($username = null, $key_id = null) {
       }
     }
 }
-function verify_tfa_login($username, $_data, $WebAuthn) {
+function verify_tfa_login($username, $_data) {
     // $_data["key_id"] should contain the key_id
     // TODO: verify tfa login with selected authenticator
     global $pdo;
     global $yubi;
     global $u2f;
     global $tfa;
+    global $WebAuthn;
     $stmt = $pdo->prepare("SELECT `authmech` FROM `tfa`
         WHERE `username` = :username AND `key_id` = :key_id AND `active` = '1'");
     $stmt->execute(array(':username' => $username, ':key_id' => $_data['key_id']));
@@ -1622,9 +1621,10 @@ function verify_tfa_login($username, $_data, $WebAuthn) {
             $stmt = $pdo->prepare("SELECT `id`, `secret` FROM `tfa`
                 WHERE `username` = :username
                 AND `authmech` = 'yubi_otp'
+                AND `key_id` = ':key_id'
                 AND `active`='1'
                 AND `secret` LIKE :modhex");
-            $stmt->execute(array(':username' => $username, ':modhex' => '%' . $yubico_modhex_id));
+            $stmt->execute(array(':username' => $username, ':modhex' => '%' . $yubico_modhex_id, ':key_id' => $_data['key_id']));
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             $yubico_auth = explode(':', $row['secret']);
             $yubi = new Auth_Yubico($yubico_auth[0], $yubico_auth[1]);
@@ -1661,8 +1661,9 @@ function verify_tfa_login($username, $_data, $WebAuthn) {
             $stmt = $pdo->prepare("SELECT `id`, `secret` FROM `tfa`
                 WHERE `username` = :username
                 AND `authmech` = 'totp'
+                AND `key_id` = :key_id
                 AND `active`='1'");
-            $stmt->execute(array(':username' => $username));
+            $stmt->execute(array(':username' => $username, ':key_id' => $_data['key_id']));
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
             foreach ($rows as $row) {
                 if ($tfa->verifyCode($row['secret'], $_data['token']) === true) {
@@ -1694,9 +1695,17 @@ function verify_tfa_login($username, $_data, $WebAuthn) {
         // u2f - deprecated, should be removed
         case "u2f":
             // delete old keys that used u2f
+            $stmt = $pdo->prepare("SELECT * FROM `tfa`
+                WHERE `username` = :username
+                AND `authmech` = 'u2f'
+                AND `key_id` = ':key_id'
+                AND `active`='1'");
+            $stmt->execute(array(':username' => $username, ':key_id' => $_data['key_id']));
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            if (count($rows) == 0) return false;
+
             $stmt = $pdo->prepare("DELETE FROM `tfa` WHERE `authmech` = :authmech AND `username` = :username");
             $stmt->execute(array(':authmech' => 'u2f', ':username' => $username));
-
             return true;
         case "webauthn":
             $tokenData = json_decode($_data['token']);

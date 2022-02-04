@@ -1,6 +1,6 @@
 <?php
 if (isset($_POST["verify_tfa_login"])) {
-  if (verify_tfa_login($_SESSION['pending_mailcow_cc_username'], $_POST, $WebAuthn)) {
+  if (verify_tfa_login($_SESSION['pending_mailcow_cc_username'], $_POST)) {
     $_SESSION['mailcow_cc_username'] = $_SESSION['pending_mailcow_cc_username'];
     $_SESSION['mailcow_cc_role'] = $_SESSION['pending_mailcow_cc_role'];
     unset($_SESSION['pending_mailcow_cc_username']);

@@ -187,12 +187,14 @@ function recursiveBase64StrToArrayBuffer(obj) {
       $(".yubi-authenticator-selection").removeClass("active");
       $(this).addClass("active");
       $("#yubi_selected_key_id").val($(this).text());
+      $("#collapseYubiTFA").collapse();
     });
     // validate Time based OTP tfa
     $(".totp-authenticator-selection").click(function(){
       $(".totp-authenticator-selection").removeClass("active");
       $(this).addClass("active");
       $("#totp_selected_key_id").val($(this).text());
+      $("#collapseTotpTFA").collapse();
     });
     // validate WebAuthn tfa
     $(".webauthn-authenticator-selection").click(function(){
