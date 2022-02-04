@@ -180,10 +180,26 @@ function recursiveBase64StrToArrayBuffer(obj) {
     $('#ConfirmTFAModal').modal({
       backdrop: 'static',
       keyboard: false
-    });
+    });    
 
+    // validate Yubi OTP tfa
+    $(".yubi-authenticator-selection").click(function(){
+      $(".yubi-authenticator-selection").removeClass("active");
+      $(this).addClass("active");
+      $("#yubi_selected_key_id").val($(this).text());
+    });
+    // validate Time based OTP tfa
+    $(".totp-authenticator-selection").click(function(){
+      $(".totp-authenticator-selection").removeClass("active");
+      $(this).addClass("active");
+      $("#totp_selected_key_id").val($(this).text());
+    });
     // validate WebAuthn tfa
-    $('#start_webauthn_confirmation').click(function(){
+    $(".webauthn-authenticator-selection").click(function(){
+      $(".webauthn-authenticator-selection").removeClass("active");
+      $(this).addClass("active");
+      $("#webauthn_selected_key_id").val($(this).text());
+
       $('#webauthn_status_auth').html('<p><i class="bi bi-arrow-repeat icon-spin"></i> ' + lang_tfa.init_webauthn + '</p>');
 
       $(this).find('input[name=token]').focus();
@@ -198,30 +214,31 @@ function recursiveBase64StrToArrayBuffer(obj) {
         window.fetch("/api/v1/get/webauthn-tfa-get-args", {method:'GET',cache:'no-cache'}).then(response => {
             return response.json();
         }).then(json => {
-            if (json.success === false) throw new Error();
+          if (json.success === false) throw new Error();
+          if (json.type === "error") throw new Error(json.msg);
       
-            recursiveBase64StrToArrayBuffer(json);
-            return json;
+          recursiveBase64StrToArrayBuffer(json);
+          return json;
         }).then(getCredentialArgs => {
-            // get credentials
-            return navigator.credentials.get(getCredentialArgs);
+          // get credentials
+          return navigator.credentials.get(getCredentialArgs);
         }).then(cred => {
-            return {
-                id: cred.rawId ? arrayBufferToBase64(cred.rawId) : null,
-                clientDataJSON: cred.response.clientDataJSON  ? arrayBufferToBase64(cred.response.clientDataJSON) : null,
-                authenticatorData: cred.response.authenticatorData ? arrayBufferToBase64(cred.response.authenticatorData) : null,
-                signature : cred.response.signature ? arrayBufferToBase64(cred.response.signature) : null
-            };
+          return {
+            id: cred.rawId ? arrayBufferToBase64(cred.rawId) : null,
+            clientDataJSON: cred.response.clientDataJSON  ? arrayBufferToBase64(cred.response.clientDataJSON) : null,
+            authenticatorData: cred.response.authenticatorData ? arrayBufferToBase64(cred.response.authenticatorData) : null,
+            signature : cred.response.signature ? arrayBufferToBase64(cred.response.signature) : null
+          };
         }).then(JSON.stringify).then(function(AuthenticatorAttestationResponse) {
-            // send request by submit
-            var form = document.getElementById('webauthn_auth_form');
-            var auth = document.getElementById('webauthn_auth_data');
-            auth.value = AuthenticatorAttestationResponse;
-            form.submit();
+          // send request by submit
+          var form = document.getElementById('webauthn_auth_form');
+          var auth = document.getElementById('webauthn_auth_data');
+          auth.value = AuthenticatorAttestationResponse;
+          form.submit();
         }).catch(function(err) {
-            var webauthn_return_code = document.getElementById('webauthn_return_code');
-            webauthn_return_code.style.display = webauthn_return_code.style.display === 'none' ? '' : null;
-            webauthn_return_code.innerHTML = lang_tfa.error_code + ': ' + err + ' ' + lang_tfa.reload_retry;
+          var webauthn_return_code = document.getElementById('webauthn_return_code');
+          webauthn_return_code.style.display = webauthn_return_code.style.display === 'none' ? '' : null;
+          webauthn_return_code.innerHTML = lang_tfa.error_code + ': ' + err + ' ' + lang_tfa.reload_retry;
         });
       } 
     });
@@ -237,7 +254,9 @@ function recursiveBase64StrToArrayBuffer(obj) {
         }
       });
     });
-    {% endif %}
+  {% endif %}
+
+
     // Validate FIDO2
   $("#fido2-login").click(function(){
     $('#fido2-alerts').html();

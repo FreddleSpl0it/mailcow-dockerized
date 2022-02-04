@@ -1596,14 +1596,13 @@ function get_tfa($username = null, $key_id = null) {
       }
     }
 }
-function verify_tfa_login($username, $_data) {
-    // $_data["selected_tfa_authenticator"] should contain the key_id
+function verify_tfa_login($username, $_data, $WebAuthn) {
+    // $_data["key_id"] should contain the key_id
     // TODO: verify tfa login with selected authenticator
     global $pdo;
     global $yubi;
     global $u2f;
     global $tfa;
-    global $WebAuthn;
     $stmt = $pdo->prepare("SELECT `authmech` FROM `tfa`
         WHERE `username` = :username AND `key_id` = :key_id AND `active` = '1'");
     $stmt->execute(array(':username' => $username, ':key_id' => $_data['key_id']));

@@ -1,24 +1,24 @@
 <?php
 if (isset($_POST["verify_tfa_login"])) {
-  if (verify_tfa_login($_SESSION['pending_mailcow_cc_username'], $_POST)) {
+  if (verify_tfa_login($_SESSION['pending_mailcow_cc_username'], $_POST, $WebAuthn)) {
     $_SESSION['mailcow_cc_username'] = $_SESSION['pending_mailcow_cc_username'];
     $_SESSION['mailcow_cc_role'] = $_SESSION['pending_mailcow_cc_role'];
     unset($_SESSION['pending_mailcow_cc_username']);
     unset($_SESSION['pending_mailcow_cc_role']);
-    unset($_SESSION['pending_tfa_method']);
+    unset($_SESSION['pending_tfa_methods']);
 	
     header("Location: /user");
   } else {
     unset($_SESSION['pending_mailcow_cc_username']);
     unset($_SESSION['pending_mailcow_cc_role']);
-    unset($_SESSION['pending_tfa_method']);
+    unset($_SESSION['pending_tfa_methods']);
   }
 }
 
 if (isset($_GET["cancel_tfa_login"])) {
     unset($_SESSION['pending_mailcow_cc_username']);
     unset($_SESSION['pending_mailcow_cc_role']);
-    unset($_SESSION['pending_tfa_method']);
+    unset($_SESSION['pending_tfa_methods']);
 
     header("Location: /");
 }
@@ -62,7 +62,7 @@ if (isset($_POST["login_user"]) && isset($_POST["pass_user"])) {
 	elseif ($as != "pending") {
         unset($_SESSION['pending_mailcow_cc_username']);
         unset($_SESSION['pending_mailcow_cc_role']);
-        unset($_SESSION['pending_tfa_method']);
+        unset($_SESSION['pending_tfa_methods']);
 		unset($_SESSION['mailcow_cc_username']);
 		unset($_SESSION['mailcow_cc_role']);
 	}

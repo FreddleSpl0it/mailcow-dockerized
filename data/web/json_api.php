@@ -450,14 +450,15 @@ if (isset($_GET['query'])) {
           $stmt = $pdo->prepare("SELECT `keyHandle` FROM `tfa` WHERE username = :username");
           $stmt->execute(array(':username' => $_SESSION['pending_mailcow_cc_username']));
           $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-          while($row = array_shift($rows)) {
-            $cids[] = base64_decode($row['keyHandle']);
-          }
-          if (count($cids) == 0) {
+          if (count($rows) == 0) {
             print(json_encode(array(
                 'type' => 'error',
                 'msg' => 'Cannot find matching credentialIds'
             )));
+            exit;
+          }
+          while($row = array_shift($rows)) {
+            $cids[] = base64_decode($row['keyHandle']);
           }
 
           $getArgs = $WebAuthn->getGetArgs($cids, 30, true, true, true, true, $GLOBALS['WEBAUTHN_UV_FLAG_LOGIN']);
