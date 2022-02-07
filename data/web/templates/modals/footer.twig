@@ -146,141 +146,148 @@
             {% if pending_tfa_authmechs["webauthn"] is defined %}
               <li class="active"><a href="#tfa_tab_webauthn" data-toggle="tab"><i class="bi bi-fingerprint"></i> WebAuthn</a></li>
             {% endif %}
+
             {% if pending_tfa_authmechs["yubi_otp"] is defined %}
-              <li><a href="#tfa_tab_yubi_otp" data-toggle="tab"><i class="bi bi-usb-drive"></i> Yubi OTP</a></li>
+              <li class="{% if pending_tfa_authmechs['webauthn'] is not defined %}active{% endif %}">
+                <a href="#tfa_tab_yubi_otp" data-toggle="tab"><i class="bi bi-usb-drive"></i> Yubi OTP</a>
+              </li>
             {% endif %}
+
             {% if pending_tfa_authmechs["totp"] is defined %}
-              <li><a href="#tfa_tab_totp" data-toggle="tab"><i class="bi bi-clock-history"></i> Time based OTP</a></li>
+              <li class="{% if pending_tfa_authmechs['webauthn'] is not defined and pending_tfa_authmechs['yubi_otp'] is not defined %}active{% endif %}">
+                <a href="#tfa_tab_totp" data-toggle="tab"><i class="bi bi-clock-history"></i> Time based OTP</a>
+              </li>
             {% endif %}
+
             <!-- <li><a href="#tfa_tab_hotp" data-toggle="tab">HOTP</a></li> -->
-            {% if pending_tfa_authmechs["u2f"] is defined %}
-              <li><a href="#tfa_tab_u2f" data-toggle="tab"><i class="bi bi-x-octagon"></i> U2F</a></li>
-            {% endif %}
+            <!-- <li><a href="#tfa_tab_u2f" data-toggle="tab"><i class="bi bi-x-octagon"></i> U2F</a></li> -->
         </ul>
 
         <div class="tab-content">
-            <div role="tabpanel" class="tab-pane" id="tfa_tab_yubi_otp">
-            <div class="panel panel-default" style="margin-bottom: 0px;">
-                <div class="panel-body">
-                  <form role="form" method="post">
-                    <legend>
-                        <i class="bi bi-shield-fill-check"></i>
-                        Available Authenticators
-                    </legend>
-                    <div class="list-group">
-                      {% for authenticator in pending_tfa_methods %}
-                        {% if authenticator["authmech"] == "yubi_otp" %}
-                          <a href="#" class="list-group-item yubi-authenticator-selection">{{ authenticator["key_id"] }}</a>
-                        {% endif %}
-                      {% endfor %}
-                    </div>
-                    <div class="collapse" id="collapseYubiTFA">
-                      <div class="form-group">
-                        <div class="input-group">
-                          <span class="input-group-addon" id="yubi-addon"><img alt="Yubicon Icon" src="/img/yubi.ico"></span>
-                          <input type="text" name="token" class="form-control" autocomplete="off" placeholder="Touch Yubikey" aria-describedby="yubi-addon">
-                          <input type="hidden" name="tfa_method" value="yubi_otp">
-                          <input type="hidden" name="key_id" id="yubi_selected_key_id" />
-                        </div>
+            <div role="tabpanel" class="tab-pane active" id="tfa_tab_webauthn">
+              <div class="panel panel-default" style="margin-bottom: 0px;">
+                  <div class="panel-body">
+                    <form role="form" method="post" id="webauthn_auth_form">
+                      <legend>
+                          <i class="bi bi-shield-fill-check"></i>
+                          Available Authenticators
+                      </legend>
+                      <div class="list-group">
+                        {% for authenticator in pending_tfa_methods %}
+                          {% if authenticator["authmech"] == "webauthn" %}
+                            <a href="#" class="list-group-item webauthn-authenticator-selection">{{ authenticator["key_id"] }}</a>
+                          {% endif %}
+                        {% endfor %}
                       </div>
-                      <button class="btn btn-sm visible-xs-block visible-sm-inline visible-md-inline visible-lg-inline btn-sm btn-default" type="submit" name="verify_tfa_login">{{ lang.login.login }}</button>
-                    </div>
-                  </form>
-                </div>
+                      <p id="webauthn_status_auth"></p>
+                      <div class="alert alert-danger" style="display:none" id="webauthn_return_code"></div>
+                      <input type="hidden" name="token" id="webauthn_auth_data"/>
+                      <input type="hidden" name="tfa_method" value="webauthn">
+                      <input type="hidden" name="verify_tfa_login"/><br/>
+                      <input type="hidden" name="key_id" id="webauthn_selected_key_id" /><br/>
+                    </form>
+                  </div>
+              </div>
             </div>
+            <div role="tabpanel" class="tab-pane" id="tfa_tab_yubi_otp">
+              <div class="panel panel-default" style="margin-bottom: 0px;">
+                  <div class="panel-body">
+                    <form role="form" method="post">
+                      <legend>
+                          <i class="bi bi-shield-fill-check"></i>
+                          Available Authenticators
+                      </legend>
+                      <div class="list-group">
+                        {% for authenticator in pending_tfa_methods %}
+                          {% if authenticator["authmech"] == "yubi_otp" %}
+                            <a href="#" class="list-group-item yubi-authenticator-selection">{{ authenticator["key_id"] }}</a>
+                          {% endif %}
+                        {% endfor %}
+                      </div>
+                      <div class="collapse" id="collapseYubiTFA">
+                        <div class="form-group">
+                          <div class="input-group">
+                            <span class="input-group-addon" id="yubi-addon"><img alt="Yubicon Icon" src="/img/yubi.ico"></span>
+                            <input type="text" name="token" class="form-control" autocomplete="off" placeholder="Touch Yubikey" aria-describedby="yubi-addon">
+                            <input type="hidden" name="tfa_method" value="yubi_otp">
+                            <input type="hidden" name="key_id" id="yubi_selected_key_id" />
+                          </div>
+                        </div>
+                        <button class="btn btn-sm visible-xs-block visible-sm-inline visible-md-inline visible-lg-inline btn-sm btn-default" type="submit" name="verify_tfa_login">{{ lang.login.login }}</button>
+                      </div>
+                    </form>
+                  </div>
+              </div>
             </div>
             <div role="tabpanel" class="tab-pane" id="tfa_tab_totp">
-            <div class="panel panel-default" style="margin-bottom: 0px;">
-                <div class="panel-body">
-                  <form role="form" method="post">        
-                    <legend>
-                        <i class="bi bi-shield-fill-check"></i>
-                        Available Authenticators
-                    </legend>
-                    <div class="list-group">
-                      {% for authenticator in pending_tfa_methods %}
-                        {% if authenticator["authmech"] == "totp" %}
-                          <a href="#" class="list-group-item totp-authenticator-selection">{{ authenticator["key_id"] }}</a>
-                        {% endif %}
-                      {% endfor %}
-                    </div>
-                    <div class="collapse" id="collapseTotpTFA">
-                      <div class="form-group">
-                        <div class="input-group">
-                          <span class="input-group-addon" id="tfa-addon"><i class="bi bi-shield-lock-fill"></i></span>
-                          <input type="number" min="000000" max="999999" name="token" class="form-control" placeholder="123456" autocomplete="one-time-code" aria-describedby="tfa-addon">
-                          <input type="hidden" name="tfa_method" value="totp">
-                          <input type="hidden" name="key_id" id="totp_selected_key_id" /><br/>
-                        </div>
+              <div class="panel panel-default" style="margin-bottom: 0px;">
+                  <div class="panel-body">
+                    <form role="form" method="post">        
+                      <legend>
+                          <i class="bi bi-shield-fill-check"></i>
+                          Available Authenticators
+                      </legend>
+                      <div class="list-group">
+                        {% for authenticator in pending_tfa_methods %}
+                          {% if authenticator["authmech"] == "totp" %}
+                            <a href="#" class="list-group-item totp-authenticator-selection">{{ authenticator["key_id"] }}</a>
+                          {% endif %}
+                        {% endfor %}
                       </div>
-                      <button class="btn btn-sm visible-xs-block visible-sm-inline visible-md-inline visible-lg-inline btn-default" type="submit" name="verify_tfa_login">{{ lang.login.login }}</button>
-                    </div>
-                  </form>
-                </div>
-            </div>
+                      <div class="collapse" id="collapseTotpTFA">
+                        <div class="form-group">
+                          <div class="input-group">
+                            <span class="input-group-addon" id="tfa-addon"><i class="bi bi-shield-lock-fill"></i></span>
+                            <input type="number" min="000000" max="999999" name="token" class="form-control" placeholder="123456" autocomplete="one-time-code" aria-describedby="tfa-addon">
+                            <input type="hidden" name="tfa_method" value="totp">
+                            <input type="hidden" name="key_id" id="totp_selected_key_id" /><br/>
+                          </div>
+                        </div>
+                        <button class="btn btn-sm visible-xs-block visible-sm-inline visible-md-inline visible-lg-inline btn-default" type="submit" name="verify_tfa_login">{{ lang.login.login }}</button>
+                      </div>
+                    </form>
+                  </div>
+              </div>
             </div>
             <!--
             <div role="tabpanel" class="tab-pane" id="tfa_tab_hotp">
-            <div class="panel panel-default" style="margin-bottom: 0px;">
-                <div class="panel-body">
-                    <div class="empty"></div>
-                </div>
-            </div>
+              <div class="panel panel-default" style="margin-bottom: 0px;">
+                  <div class="panel-body">
+                      <div class="empty"></div>
+                  </div>
+              </div>
             </div>
             -->
-            <div role="tabpanel" class="tab-pane active" id="tfa_tab_webauthn">
-            <div class="panel panel-default" style="margin-bottom: 0px;">
-                <div class="panel-body">
-                  <form role="form" method="post" id="webauthn_auth_form">
-                    <legend>
-                        <i class="bi bi-shield-fill-check"></i>
-                        Available Authenticators
-                    </legend>
-                    <div class="list-group">
-                      {% for authenticator in pending_tfa_methods %}
-                        {% if authenticator["authmech"] == "webauthn" %}
-                          <a href="#" class="list-group-item webauthn-authenticator-selection">{{ authenticator["key_id"] }}</a>
-                        {% endif %}
-                      {% endfor %}
-                    </div>
-                    <p id="webauthn_status_auth"></p>
-                    <div class="alert alert-danger" style="display:none" id="webauthn_return_code"></div>
-                    <input type="hidden" name="token" id="webauthn_auth_data"/>
-                    <input type="hidden" name="tfa_method" value="webauthn">
-                    <input type="hidden" name="verify_tfa_login"/><br/>
-                    <input type="hidden" name="key_id" id="webauthn_selected_key_id" /><br/>
-                  </form>
-                </div>
-            </div>
-            </div>
+            <!--
             <div role="tabpanel" class="tab-pane" id="tfa_tab_u2f">
-            <div class="panel panel-default" style="margin-bottom: 0px;">
-                <div class="panel-body">
-                  {# leave this here to inform users that u2f is deprecated #}
-                  <form role="form" method="post" id="u2f_auth_form">
-                    <legend>
-                        <i class="bi bi-shield-fill-check"></i>
-                        Available Authenticators
-                    </legend>
-                    <div class="list-group">
-                      {% for authenticator in pending_tfa_methods %}
-                        {% if authenticator["authmech"] == "u2f" %}
-                          <a href="#" class="list-group-item u2f-authenticator-selection">{{ authenticator["key_id"] }}</a>
-                        {% endif %}
-                      {% endfor %}
-                    </div>
-                    <div class="collapse" id="collapseU2fTFA">
-                      <p>{{ lang.tfa.u2f_deprecated }}</p>
-                      <p><b>{{ lang.tfa.u2f_deprecated_important }}</b></p>
-                      <input type="hidden" name="token" value="destroy" />
-                      <input type="hidden" name="tfa_method" value="u2f">
-                      <input type="hidden" name="verify_tfa_login"/><br/>
-                      <button type="submit" class="btn btn-xs-lg btn-success" value="Login">{{ lang.login.login }}</button>
-                    </div>
-                  </form>
-                </div>
+              <div class="panel panel-default" style="margin-bottom: 0px;">
+                  <div class="panel-body">
+                    {# leave this here to inform users that u2f is deprecated #}
+                    <form role="form" method="post" id="u2f_auth_form">
+                      <legend>
+                          <i class="bi bi-shield-fill-check"></i>
+                          Available Authenticators
+                      </legend>
+                      <div class="list-group">
+                        {% for authenticator in pending_tfa_methods %}
+                          {% if authenticator["authmech"] == "u2f" %}
+                            <a href="#" class="list-group-item u2f-authenticator-selection">{{ authenticator["key_id"] }}</a>
+                          {% endif %}
+                        {% endfor %}
+                      </div>
+                      <div class="collapse" id="collapseU2fTFA">
+                        <p>{{ lang.tfa.u2f_deprecated }}</p>
+                        <p><b>{{ lang.tfa.u2f_deprecated_important }}</b></p>
+                        <input type="hidden" name="token" value="destroy" />
+                        <input type="hidden" name="tfa_method" value="u2f">
+                        <input type="hidden" name="verify_tfa_login"/><br/>
+                        <button type="submit" class="btn btn-xs-lg btn-success" value="Login">{{ lang.login.login }}</button>
+                      </div>
+                    </form>
+                  </div>
+              </div>
             </div>
-            </div>
+            -->
         </div>
 
     </div>

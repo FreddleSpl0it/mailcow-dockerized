@@ -834,7 +834,7 @@ function check_login($user, $pass, $app_passwd_data = false) {
     if (verify_hash($row['password'], $pass)) {
       // check for tfa authenticators
       $authenticators = get_tfa($user);
-      if (isset($authenticators['additional']) && is_array($authenticators['additional'])) {
+      if (isset($authenticators['additional']) && is_array($authenticators['additional']) && count($authenticators['additional']) > 0) {
         // active tfa authenticators found, set pending user login
         $_SESSION['pending_mailcow_cc_username'] = $user;
         $_SESSION['pending_mailcow_cc_role'] = "admin";

@@ -34,6 +34,7 @@ if (isset($_POST["quick_delete"])) {
 if (isset($_POST["login_user"]) && isset($_POST["pass_user"])) {
 	$login_user = strtolower(trim($_POST["login_user"]));
 	$as = check_login($login_user, $_POST["pass_user"]);
+  
 	if ($as == "admin") {
 		$_SESSION['mailcow_cc_username'] = $login_user;
 		$_SESSION['mailcow_cc_role'] = "admin";
