@@ -23,6 +23,7 @@ if (is_array($alertbox_log_parser)) {
   unset($_SESSION['return']);
 }
 
+
 // globals
 $globalVariables = [
   'mailcow_info' => array(
@@ -31,6 +32,7 @@ $globalVariables = [
   ),
   'js_path' => '/cache/'.basename($JSPath),
   'pending_tfa_methods' => @$_SESSION['pending_tfa_methods'],
+  'pending_tfa_authmechs' => array_column(@$_SESSION['pending_tfa_methods'], 'authmech', 'authmech'),
   'pending_mailcow_cc_username' => @$_SESSION['pending_mailcow_cc_username'],
   'lang_footer' => json_encode($lang['footer']),
   'lang_acl' => json_encode($lang['acl']),

@@ -143,11 +143,19 @@
       </div>
       
         <ul class="nav nav-tabs" id="tabContent">
-            <li class="active"><a href="#tfa_tab_webauthn" data-toggle="tab">WebAuthn</a></li>
-            <li><a href="#tfa_tab_yubi_otp" data-toggle="tab">Yubi OTP</a></li>
-            <li><a href="#tfa_tab_totp" data-toggle="tab">Time based OTP</a></li>
+            {% if pending_tfa_authmechs["webauthn"] is defined %}
+              <li class="active"><a href="#tfa_tab_webauthn" data-toggle="tab"><i class="bi bi-fingerprint"></i> WebAuthn</a></li>
+            {% endif %}
+            {% if pending_tfa_authmechs["yubi_otp"] is defined %}
+              <li><a href="#tfa_tab_yubi_otp" data-toggle="tab"><i class="bi bi-usb-drive"></i> Yubi OTP</a></li>
+            {% endif %}
+            {% if pending_tfa_authmechs["totp"] is defined %}
+              <li><a href="#tfa_tab_totp" data-toggle="tab"><i class="bi bi-clock-history"></i> Time based OTP</a></li>
+            {% endif %}
             <!-- <li><a href="#tfa_tab_hotp" data-toggle="tab">HOTP</a></li> -->
-            <li><a href="#tfa_tab_u2f" data-toggle="tab">U2F</a></li>
+            {% if pending_tfa_authmechs["u2f"] is defined %}
+              <li><a href="#tfa_tab_u2f" data-toggle="tab"><i class="bi bi-x-octagon"></i> U2F</a></li>
+            {% endif %}
         </ul>
 
         <div class="tab-content">
