@@ -1498,7 +1498,7 @@ function get_tfa($username = null, $key_id = null) {
 
   if (!isset($key_id)){
     // fetch all tfa methods - just get information about possible authenticators
-    $stmt = $pdo->prepare("SELECT `key_id`, `authmech` FROM `tfa`
+    $stmt = $pdo->prepare("SELECT `id`, `key_id`, `authmech` FROM `tfa`
         WHERE `username` = :username AND `active` = '1'");
     $stmt->execute(array(':username' => $username));
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -1595,13 +1595,15 @@ function get_tfa($username = null, $key_id = null) {
     }
 }
 function verify_tfa_login($username, $_data) {
+  global $pdo;
+  global $yubi;
+  global $u2f;
+  global $tfa;
+  global $WebAuthn;
+
+  if ($_data['tfa_method'] != 'u2f'){
     // $_data["key_id"] should contain the key_id
     // TODO: verify tfa login with selected authenticator
-    global $pdo;
-    global $yubi;
-    global $u2f;
-    global $tfa;
-    global $WebAuthn;
     $stmt = $pdo->prepare("SELECT `authmech` FROM `tfa`
         WHERE `username` = :username AND `key_id` = :key_id AND `active` = '1'");
     $stmt->execute(array(':username' => $username, ':key_id' => $_data['key_id']));
@@ -1692,21 +1694,6 @@ function verify_tfa_login($username, $_data) {
             return false;
             }
         break;
-        // u2f - deprecated, should be removed
-        case "u2f":
-            // delete old keys that used u2f
-            $stmt = $pdo->prepare("SELECT * FROM `tfa`
-                WHERE `username` = :username
-                AND `authmech` = 'u2f'
-                AND `key_id` = ':key_id'
-                AND `active`='1'");
-            $stmt->execute(array(':username' => $username, ':key_id' => $_data['key_id']));
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            if (count($rows) == 0) return false;
-
-            $stmt = $pdo->prepare("DELETE FROM `tfa` WHERE `authmech` = :authmech AND `username` = :username");
-            $stmt->execute(array(':authmech' => 'u2f', ':username' => $username));
-            return true;
         case "webauthn":
             $tokenData = json_decode($_data['token']);
             $clientDataJSON = base64_decode($tokenData->clientDataJSON);
@@ -1715,7 +1702,7 @@ function verify_tfa_login($username, $_data) {
             $id = base64_decode($tokenData->id);
             $challenge = $_SESSION['challenge'];
 
-            $stmt = $pdo->prepare("SELECT `key_id`, `keyHandle`, `username`, `publicKey` FROM `tfa` WHERE `keyHandle` = :tokenId");
+            $stmt = $pdo->prepare("SELECT `id`, `key_id`, `keyHandle`, `username`, `publicKey` FROM `tfa` WHERE `keyHandle` = :tokenId");
             $stmt->execute(array(':tokenId' => $tokenData->id));
             $process_webauthn = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -1772,7 +1759,7 @@ function verify_tfa_login($username, $_data) {
 
 
             $_SESSION["mailcow_cc_username"] = $process_webauthn['username'];
-            $_SESSION['tfa_id'] = $process_webauthn['key_id'];
+            $_SESSION['tfa_id'] = $process_webauthn['id'];
             $_SESSION['authReq'] = null;
             unset($_SESSION["challenge"]);
             $_SESSION['return'][] =  array(
@@ -1793,6 +1780,17 @@ function verify_tfa_login($username, $_data) {
     }
 
     return false;
+  } else {
+    // delete old keys that used u2f
+    $stmt = $pdo->prepare("SELECT * FROM `tfa` WHERE `authmech` = 'u2f' AND `username` = :username");
+    $stmt->execute(array(':username' => $username));
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    if (count($rows) == 0) return false;
+
+    $stmt = $pdo->prepare("DELETE FROM `tfa` WHERE `authmech` = 'u2f' AND `username` = :username");
+    $stmt->execute(array(':username' => $username));
+    return true;
+  }
 }
 function admin_api($access, $action, $data = null) {
   global $pdo;

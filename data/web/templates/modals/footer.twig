@@ -143,27 +143,30 @@
       </div>
       
         <ul class="nav nav-tabs" id="tabContent">
-            {% if pending_tfa_authmechs["webauthn"] is defined %}
+            {% if pending_tfa_authmechs["webauthn"] is defined and pending_tfa_authmechs["u2f"] is not defined %}
               <li class="active"><a href="#tfa_tab_webauthn" data-toggle="tab"><i class="bi bi-fingerprint"></i> WebAuthn</a></li>
             {% endif %}
 
-            {% if pending_tfa_authmechs["yubi_otp"] is defined %}
-              <li class="{% if pending_tfa_authmechs['webauthn'] is not defined %}active{% endif %}">
+            {% if pending_tfa_authmechs["yubi_otp"] is defined and pending_tfa_authmechs["u2f"] is not defined %}
+              <li class="tab-pane {% if pending_tfa_authmechs["yubi_otp"] %}active{% endif %}">
                 <a href="#tfa_tab_yubi_otp" data-toggle="tab"><i class="bi bi-usb-drive"></i> Yubi OTP</a>
               </li>
             {% endif %}
 
-            {% if pending_tfa_authmechs["totp"] is defined %}
-              <li class="{% if pending_tfa_authmechs['webauthn'] is not defined and pending_tfa_authmechs['yubi_otp'] is not defined %}active{% endif %}">
+            {% if pending_tfa_authmechs["totp"] is defined and pending_tfa_authmechs["u2f"] is not defined %}
+              <li class="tab-pane {% if pending_tfa_authmechs["totp"] %}active{% endif %}">
                 <a href="#tfa_tab_totp" data-toggle="tab"><i class="bi bi-clock-history"></i> Time based OTP</a>
               </li>
             {% endif %}
 
             <!-- <li><a href="#tfa_tab_hotp" data-toggle="tab">HOTP</a></li> -->
-            <!-- <li><a href="#tfa_tab_u2f" data-toggle="tab"><i class="bi bi-x-octagon"></i> U2F</a></li> -->
+            {% if pending_tfa_authmechs["u2f"] is defined %}
+              <li class="active"><a href="#tfa_tab_u2f" data-toggle="tab"><i class="bi bi-x-octagon"></i> U2F</a></li>
+            {% endif %}
         </ul>
 
         <div class="tab-content">
+          {% if pending_tfa_authmechs["webauthn"] is defined and pending_tfa_authmechs["u2f"] is not defined %}
             <div role="tabpanel" class="tab-pane active" id="tfa_tab_webauthn">
               <div class="panel panel-default" style="margin-bottom: 0px;">
                   <div class="panel-body">
@@ -189,7 +192,9 @@
                   </div>
               </div>
             </div>
-            <div role="tabpanel" class="tab-pane" id="tfa_tab_yubi_otp">
+          {% endif %}
+          {% if pending_tfa_authmechs["yubi_otp"] is defined and pending_tfa_authmechs["u2f"] is not defined %}
+            <div role="tabpanel" class="tab-pane {% if pending_tfa_authmechs["yubi_otp"] %}active{% endif %}" id="tfa_tab_yubi_otp">
               <div class="panel panel-default" style="margin-bottom: 0px;">
                   <div class="panel-body">
                     <form role="form" method="post">
@@ -219,7 +224,9 @@
                   </div>
               </div>
             </div>
-            <div role="tabpanel" class="tab-pane" id="tfa_tab_totp">
+          {% endif %}
+          {% if pending_tfa_authmechs["totp"] is defined and pending_tfa_authmechs["u2f"] is not defined %}
+            <div role="tabpanel" class="tab-pane {% if pending_tfa_authmechs["totp"] %}active{% endif %}" id="tfa_tab_totp">
               <div class="panel panel-default" style="margin-bottom: 0px;">
                   <div class="panel-body">
                     <form role="form" method="post">        
@@ -249,6 +256,7 @@
                   </div>
               </div>
             </div>
+          {% endif %}
             <!--
             <div role="tabpanel" class="tab-pane" id="tfa_tab_hotp">
               <div class="panel panel-default" style="margin-bottom: 0px;">
@@ -258,24 +266,13 @@
               </div>
             </div>
             -->
-            <!--
-            <div role="tabpanel" class="tab-pane" id="tfa_tab_u2f">
+          {% if pending_tfa_authmechs["u2f"] is defined %}
+            <div role="tabpanel" class="tab-pane active" id="tfa_tab_u2f">
               <div class="panel panel-default" style="margin-bottom: 0px;">
                   <div class="panel-body">
                     {# leave this here to inform users that u2f is deprecated #}
                     <form role="form" method="post" id="u2f_auth_form">
-                      <legend>
-                          <i class="bi bi-shield-fill-check"></i>
-                          Available Authenticators
-                      </legend>
-                      <div class="list-group">
-                        {% for authenticator in pending_tfa_methods %}
-                          {% if authenticator["authmech"] == "u2f" %}
-                            <a href="#" class="list-group-item u2f-authenticator-selection">{{ authenticator["key_id"] }}</a>
-                          {% endif %}
-                        {% endfor %}
-                      </div>
-                      <div class="collapse" id="collapseU2fTFA">
+                      <div>
                         <p>{{ lang.tfa.u2f_deprecated }}</p>
                         <p><b>{{ lang.tfa.u2f_deprecated_important }}</b></p>
                         <input type="hidden" name="token" value="destroy" />
@@ -287,7 +284,7 @@
                   </div>
               </div>
             </div>
-            -->
+          {% endif %}
         </div>
 
     </div>
