@@ -869,8 +869,11 @@ function check_login($user, $pass, $app_passwd_data = false) {
   $stmt->execute(array(':user' => $user));
   $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
   foreach ($rows as $row) {
+    // verify password
     if (verify_hash($row['password'], $pass) !== false) {
-      if (get_tfa($user)['name'] != "none") {
+      // check for tfa authenticators
+      $authenticators = get_tfa($user);
+      if (isset($authenticators['additional']) && is_array($authenticators['additional']) && count($authenticators['additional']) > 0) {
         $_SESSION['pending_mailcow_cc_username'] = $user;
         $_SESSION['pending_mailcow_cc_role'] = "domainadmin";
         $_SESSION['pending_tfa_method'] = get_tfa($user)['name'];
