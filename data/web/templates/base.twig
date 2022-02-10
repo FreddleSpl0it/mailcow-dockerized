@@ -379,6 +379,7 @@ function recursiveBase64StrToArrayBuffer(obj) {
 
         $("#start_webauthn_register").click(() => {
             var key_id = document.getElementsByName('key_id')[1].value;
+            var confirm_password = document.getElementsByName('confirm_password')[1].value;
 
             // fetch WebAuthn create args
             window.fetch("/api/v1/get/webauthn-tfa-registration/{{ mailcow_cc_username|url_encode(true)|default('null') }}", {method:'GET',cache:'no-cache'}).then(response => {
@@ -396,7 +397,8 @@ function recursiveBase64StrToArrayBuffer(obj) {
                     clientDataJSON: cred.response.clientDataJSON  ? arrayBufferToBase64(cred.response.clientDataJSON) : null,
                     attestationObject: cred.response.attestationObject ? arrayBufferToBase64(cred.response.attestationObject) : null,
                     key_id: key_id,
-                    tfa_method: "webauthn"
+                    tfa_method: "webauthn",
+                    confirm_password: confirm_password
                 };
             }).then(JSON.stringify).then(AuthenticatorAttestationResponse => {
                 // send request

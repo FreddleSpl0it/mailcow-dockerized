@@ -1148,6 +1148,7 @@ function set_tfa($_data) {
   global $yubi;
   global $tfa;
   $_data_log = $_data;
+
   !isset($_data_log['confirm_password']) ?: $_data_log['confirm_password'] = '*';
   $username = $_SESSION['mailcow_cc_username'];
   if (!isset($_SESSION['mailcow_cc_role']) || empty($username)) {
@@ -1158,12 +1159,12 @@ function set_tfa($_data) {
       );
       return false;
   }
+
   $stmt = $pdo->prepare("SELECT `password` FROM `admin`
       WHERE `username` = :username");
   $stmt->execute(array(':username' => $username));
   $row = $stmt->fetch(PDO::FETCH_ASSOC);
-  $num_results = count($stmt->fetchAll(PDO::FETCH_ASSOC));
-  if (!empty($num_results)) {
+  if ($row) {
     if (!verify_hash($row['password'], $_data["confirm_password"])) {
       $_SESSION['return'][] =  array(
         'type' => 'danger',
@@ -1173,12 +1174,12 @@ function set_tfa($_data) {
       return false;
     }
   }
+
   $stmt = $pdo->prepare("SELECT `password` FROM `mailbox`
       WHERE `username` = :username");
   $stmt->execute(array(':username' => $username));
   $row = $stmt->fetch(PDO::FETCH_ASSOC);
-  $num_results = count($stmt->fetchAll(PDO::FETCH_ASSOC));
-  if (!empty($num_results)) {
+  if ($row) {
     if (!verify_hash($row['password'], $_data["confirm_password"])) {
       $_SESSION['return'][] =  array(
         'type' => 'danger',
