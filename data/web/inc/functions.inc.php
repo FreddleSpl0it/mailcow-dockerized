@@ -1148,48 +1148,42 @@ function set_tfa($_data) {
   global $yubi;
   global $tfa;
   $_data_log = $_data;
-
+  $access_denied = null;
   !isset($_data_log['confirm_password']) ?: $_data_log['confirm_password'] = '*';
   $username = $_SESSION['mailcow_cc_username'];
-  if (!isset($_SESSION['mailcow_cc_role']) || empty($username)) {
-      $_SESSION['return'][] =  array(
-        'type' => 'danger',
-        'log' => array(__FUNCTION__, $_data_log),
-        'msg' => 'access_denied'
-      );
-      return false;
-  }
 
+  // check for empty user and role
+  if (!isset($_SESSION['mailcow_cc_role']) || empty($username)) $access_denied = true;
+
+  // check admin confirm password
   $stmt = $pdo->prepare("SELECT `password` FROM `admin`
       WHERE `username` = :username");
   $stmt->execute(array(':username' => $username));
   $row = $stmt->fetch(PDO::FETCH_ASSOC);
-  if ($row) {
-    if (!verify_hash($row['password'], $_data["confirm_password"])) {
-      $_SESSION['return'][] =  array(
-        'type' => 'danger',
-        'log' => array(__FUNCTION__, $_data_log),
-        'msg' => 'access_denied'
-      );
-      return false;
-    }
+  if ($row && $access_denied === null) {
+    if (!verify_hash($row['password'], $_data["confirm_password"])) $access_denied = true;
+    else $access_denied = false;
   }
 
+  // check mailbox confirm password
   $stmt = $pdo->prepare("SELECT `password` FROM `mailbox`
       WHERE `username` = :username");
   $stmt->execute(array(':username' => $username));
   $row = $stmt->fetch(PDO::FETCH_ASSOC);
-  if ($row) {
-    if (!verify_hash($row['password'], $_data["confirm_password"])) {
-      $_SESSION['return'][] =  array(
-        'type' => 'danger',
-        'log' => array(__FUNCTION__, $_data_log),
-        'msg' => 'access_denied'
-      );
-      return false;
-    }
+  if ($row && $access_denied === null) {
+    if (!verify_hash($row['password'], $_data["confirm_password"])) $access_denied = true;
+    else $access_denied = false;
   }
 
+  // set access_denied error
+  if ($access_denied){
+    $_SESSION['return'][] =  array(
+      'type' => 'danger',
+      'log' => array(__FUNCTION__, $_data_log),
+      'msg' => 'access_denied'
+    );
+    return false;
+  }
 
   switch ($_data["tfa_method"]) {
     case "yubi_otp":
@@ -1443,25 +1437,47 @@ function unset_tfa_key($_data) {
   global $pdo;
   global $lang;
   $_data_log = $_data;
+  $access_denied = null;
   $id = intval($_data['unset_tfa_key']);
   $username = $_SESSION['mailcow_cc_username'];
-  if (!isset($_SESSION['mailcow_cc_role']) || empty($username)) {
-    $_SESSION['return'][] =  array(
-      'type' => 'danger',
-      'log' => array(__FUNCTION__, $_data_log),
-      'msg' => 'access_denied'
-    );
-    return false;
-  }
+
+  // check for empty user and role
+  if (!isset($_SESSION['mailcow_cc_role']) || empty($username)) $access_denied = true;
+
   try {
-    if (!is_numeric($id)) {
-      $_SESSION['return'][] =  array(
+    if (!is_numeric($id)) $access_denied = true;
+
+    // check admin confirm password
+    $stmt = $pdo->prepare("SELECT `password` FROM `admin`
+      WHERE `username` = :username");
+    $stmt->execute(array(':username' => $username));
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($row && $access_denied === null) {
+      if (!verify_hash($row['password'], $_data["confirm_password"])) $access_denied = true;
+      else $access_denied = false;
+    }
+
+    // check mailbox confirm password
+    $stmt = $pdo->prepare("SELECT `password` FROM `mailbox`
+      WHERE `username` = :username");
+    $stmt->execute(array(':username' => $username));
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($row && $access_denied === null) {
+      if (!verify_hash($row['password'], $_data["confirm_password"])) $access_denied = true;
+      else $access_denied = false;
+    }
+
+    // set access_denied error
+    if ($access_denied){
+      $_SESSION['return'][] = array(
         'type' => 'danger',
         'log' => array(__FUNCTION__, $_data_log),
         'msg' => 'access_denied'
       );
       return false;
-    }
+    } 
+
+    // check if it's last key
     $stmt = $pdo->prepare("SELECT COUNT(*) AS `keys` FROM `tfa`
       WHERE `username` = :username AND `active` = '1'");
     $stmt->execute(array(':username' => $username));
@@ -1474,6 +1490,8 @@ function unset_tfa_key($_data) {
       );
       return false;
     }
+
+    // delete key
     $stmt = $pdo->prepare("DELETE FROM `tfa` WHERE `username` = :username AND `id` = :id");
     $stmt->execute(array(':username' => $username, ':id' => $id));
     $_SESSION['return'][] =  array(

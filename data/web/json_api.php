@@ -197,6 +197,7 @@ if (isset($_GET['query'])) {
               // safe authenticator in mysql `tfa` table
               $_data['tfa_method'] = $post->tfa_method;
               $_data['key_id'] = $post->key_id;
+              $_data['confirm_password'] = $post->confirm_password;
               $_data['registration'] = $data;
               set_tfa($_data);
 
