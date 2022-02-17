@@ -180,29 +180,58 @@ function recursiveBase64StrToArrayBuffer(obj) {
     $('#ConfirmTFAModal').modal({
       backdrop: 'static',
       keyboard: false
-    });    
+    });
 
     // validate Yubi OTP tfa
+    $("#pending_tfa_tab_yubi_otp").click(function(){
+      $(".totp-authenticator-selection").removeClass("active");
+      $(".webauthn-authenticator-selection").removeClass("active");
+
+      $("#collapseTotpTFA").collapse('hide');
+      $("#collapseWebAuthnTFA").collapse('hide');
+    });
     $(".yubi-authenticator-selection").click(function(){
       $(".yubi-authenticator-selection").removeClass("active");
       $(this).addClass("active");
-      $("#yubi_selected_key_id").val($(this).text());
-      $("#collapseYubiTFA").collapse();
+
+      var key_id = $(this).children('span').first().text();
+      $("#yubi_selected_key_id").val(key_id);
+
+      $("#collapseYubiTFA").collapse('show');
     });
     // validate Time based OTP tfa
+    $("#pending_tfa_tab_totp").click(function(){
+      $(".yubi-authenticator-selection").removeClass("active");
+      $(".webauthn-authenticator-selection").removeClass("active");
+
+      $("#collapseYubiTFA").collapse('hide');
+      $("#collapseWebAuthnTFA").collapse('hide');
+    });
     $(".totp-authenticator-selection").click(function(){
       $(".totp-authenticator-selection").removeClass("active");
       $(this).addClass("active");
-      $("#totp_selected_key_id").val($(this).text());
-      $("#collapseTotpTFA").collapse();
+      
+      var key_id = $(this).children('span').first().text();
+      $("#totp_selected_key_id").val(key_id);
+
+      $("#collapseTotpTFA").collapse('show');
     });
     // validate WebAuthn tfa
+    $("#pending_tfa_tab_webauthn").click(function(){
+      $(".totp-authenticator-selection").removeClass("active");
+      $(".yubi-authenticator-selection").removeClass("active");
+
+      $("#collapseTotpTFA").collapse('hide');
+      $("#collapseYubiTFA").collapse('hide');
+    });
     $(".webauthn-authenticator-selection").click(function(){
       $(".webauthn-authenticator-selection").removeClass("active");
       $(this).addClass("active");
-      $("#webauthn_selected_key_id").val($(this).text());
-
-      $('#webauthn_status_auth').html('<p><i class="bi bi-arrow-repeat icon-spin"></i> ' + lang_tfa.init_webauthn + '</p>');
+      
+      var key_id = $(this).children('span').first().text();
+      $("#webauthn_selected_key_id").val(key_id);
+      
+      $("#collapseWebAuthnTFA").collapse('show');
 
       $(this).find('input[name=token]').focus();
       if(document.getElementById("webauthn_auth_data") !== null) {

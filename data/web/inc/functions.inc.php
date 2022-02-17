@@ -1446,27 +1446,7 @@ function unset_tfa_key($_data) {
 
   try {
     if (!is_numeric($id)) $access_denied = true;
-
-    // check admin confirm password
-    $stmt = $pdo->prepare("SELECT `password` FROM `admin`
-      WHERE `username` = :username");
-    $stmt->execute(array(':username' => $username));
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    if ($row && $access_denied === null) {
-      if (!verify_hash($row['password'], $_data["confirm_password"])) $access_denied = true;
-      else $access_denied = false;
-    }
-
-    // check mailbox confirm password
-    $stmt = $pdo->prepare("SELECT `password` FROM `mailbox`
-      WHERE `username` = :username");
-    $stmt->execute(array(':username' => $username));
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    if ($row && $access_denied === null) {
-      if (!verify_hash($row['password'], $_data["confirm_password"])) $access_denied = true;
-      else $access_denied = false;
-    }
-
+    
     // set access_denied error
     if ($access_denied){
       $_SESSION['return'][] = array(
