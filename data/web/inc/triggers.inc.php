@@ -37,7 +37,7 @@ if (isset($_POST["login_user"]) && isset($_POST["pass_user"])) {
 	if ($as == "admin") {
 		$_SESSION['mailcow_cc_username'] = $login_user;
 		$_SESSION['mailcow_cc_role'] = "admin";
-		header("Location: /admin");
+		header("Location: /dashboard");
 	}
 	elseif ($as == "domainadmin") {
 		$_SESSION['mailcow_cc_username'] = $login_user;
