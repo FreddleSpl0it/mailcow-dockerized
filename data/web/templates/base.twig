@@ -30,40 +30,30 @@
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav navbar-right">
-        {% if mailcow_locale %}
-        <li class="dropdown{% if available_languages|length == 1 %}lang-link-disabled{% endif %}">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><span class="flag-icon flag-icon-{{ mailcow_locale }}"></span><span class="caret"></span></a>
-          <ul class="dropdown-menu" role="menu">
-            {% for key, val in available_languages %}
-            <li{% if mailcow_locale == key %} class="active"{% endif %}>
-              <a href="?{{ query_string({'lang': key}) }}">
-                <span class="flag-icon flag-icon-{{ key }}"></span>{{ val }}
-              </a>
-            </li>
-            {% endfor %}
-          </ul>
-        </li>
-        {% endif %}
         {% if mailcow_cc_role %}
         <li class="dropdown">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{ lang.header.mailcow_settings }} <span class="caret"></span></a>
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="bi bi-hdd-stack-fill"></i> {{ lang.header.mailcow_system }} <span class="caret"></span></a>
           <ul class="dropdown-menu" role="menu">
             {% if mailcow_cc_role == 'admin' %}
+            <li {% if is_uri('dashboard') %}class="active"{% endif %}><a href="/dashboard">{{ lang.header.dashboard }}</a></li>
             <li {% if is_uri('admin') %}class="active"{% endif %}><a href="/admin">{{ lang.header.administration }}</a></li>
             <li {% if is_uri('debug') %}class="active"{% endif %}><a href="/debug">{{ lang.header.debug }}</a></li>
-            {% endif %}
-            {% if mailcow_cc_role == 'admin' or mailcow_cc_role == 'domainadmin' %}
-            <li {% if is_uri('mailbox') %}class="active"{% endif %}><a href="/mailbox">{{ lang.header.mailboxes }}</a></li>
+            <li><a href data-toggle="modal" data-container="sogo-mailcow" data-target="#RestartContainer">{{ lang.header.restart_sogo }}</a></li>
             {% endif %}
             {% if mailcow_cc_role != 'admin' %}
             <li {% if is_uri('user') %}class="active"{% endif %}><a href="/user">{{ lang.header.user_settings }}</a></li>
             {% endif %}
           </ul>
         </li>
-        <li {% if is_uri('quarantine') %}class="active"{% endif %}><a href="/quarantine"><i class="bi bi-inbox-fill"></i> {{ lang.header.quarantine }}</a></li>
-        {% endif %}
-        {% if mailcow_cc_role == 'admin' and not skip_sogo %}
-        <li><a href data-toggle="modal" data-container="sogo-mailcow" data-target="#RestartContainer"><i class="bi bi-arrow-repeat"></i> {{ lang.header.restart_sogo }}</a></li>
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="bi bi-inbox-fill"></i> {{ lang.header.mailboxes }} <span class="caret"></span></a>
+          <ul class="dropdown-menu" role="menu">
+            {% if mailcow_cc_role == 'admin' or mailcow_cc_role == 'domainadmin' %}
+            <li {% if is_uri('mailbox') %}class="active"{% endif %}><a href="/mailbox">{{ lang.header.mailboxes_settings }}</a></li>
+            {% endif %}
+            <li {% if is_uri('quarantine') %}class="active"{% endif %}><a href="/quarantine">{{ lang.header.quarantine }}</a></li>
+          </ul>
+        </li>
         {% endif %}
         {% if mailcow_apps or app_links %}
         <li class="dropdown">
@@ -80,6 +70,20 @@
               {% for key, val in row %}
               <li><a href="{{ val }}">{{ key }}</a></li>
               {% endfor %}
+            {% endfor %}
+          </ul>
+        </li>
+        {% endif %}
+        {% if mailcow_locale %}
+        <li class="dropdown{% if available_languages|length == 1 %}lang-link-disabled{% endif %}">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><span class="flag-icon flag-icon-{{ mailcow_locale }}"></span><span class="caret"></span></a>
+          <ul class="dropdown-menu" role="menu">
+            {% for key, val in available_languages %}
+            <li{% if mailcow_locale == key %} class="active"{% endif %}>
+              <a href="?{{ query_string({'lang': key}) }}">
+                <span class="flag-icon flag-icon-{{ key }}"></span>{{ val }}
+              </a>
+            </li>
             {% endfor %}
           </ul>
         </li>
