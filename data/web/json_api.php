@@ -1454,24 +1454,39 @@ if (isset($_GET['query'])) {
                     'used_percent' => $vmail_df[4]
                   );
                   echo json_encode($temp, JSON_UNESCAPED_SLASHES);
-              break;
-              case "solr":
-                $solr_status = solr_status();
-                $solr_size = ($solr_status['status']['dovecot-fts']['index']['size']);
-                $solr_documents = ($solr_status['status']['dovecot-fts']['index']['numDocs']);
-                if (strtolower(getenv('SKIP_SOLR')) != 'n') {
-                  $solr_enabled = false;
-                }
-                else {
-                  $solr_enabled = true;
-                }
-                echo json_encode(array(
-                  'type' => 'info',
-                  'solr_enabled' => $solr_enabled,
-                  'solr_size' => $solr_size,
-                  'solr_documents' => $solr_documents
-                ));
-              break;
+                break;
+                case "solr":
+                  $solr_status = solr_status();
+                  $solr_size = ($solr_status['status']['dovecot-fts']['index']['size']);
+                  $solr_documents = ($solr_status['status']['dovecot-fts']['index']['numDocs']);
+                  if (strtolower(getenv('SKIP_SOLR')) != 'n') {
+                    $solr_enabled = false;
+                  }
+                  else {
+                    $solr_enabled = true;
+                  }
+                  echo json_encode(array(
+                    'type' => 'info',
+                    'solr_enabled' => $solr_enabled,
+                    'solr_size' => $solr_size,
+                    'solr_documents' => $solr_documents
+                  ));
+                break;
+                case "host":
+                  $stats = docker("host_stats");
+                  
+                  $exec_fields_vmail = array('cmd' => 'system', 'task' => 'df', 'dir' => '/var/vmail');
+                  $vmail_df = explode(',', json_decode(docker('post', 'dovecot-mailcow', 'exec', $exec_fields_vmail), true));
+                  $stats["vmail"] = array(
+                    'type' => 'info',
+                    'disk' => $vmail_df[0],
+                    'used' => $vmail_df[2],
+                    'total'=> $vmail_df[1],
+                    'used_percent' => $vmail_df[4]
+                  );
+                  
+                  echo json_encode($stats);
+                break;
               }
             }
           break;

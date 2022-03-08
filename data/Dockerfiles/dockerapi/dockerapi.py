@@ -6,6 +6,7 @@ from flask import jsonify
 from flask import Response
 from flask import request
 from threading import Thread
+from datetime import datetime
 import docker
 import uuid
 import signal
@@ -17,6 +18,7 @@ import ssl
 import socket
 import subprocess
 import traceback
+import psutil
 
 docker_client = docker.DockerClient(base_url='unix://var/run/docker.sock', version='auto')
 app = Flask(__name__)
@@ -326,6 +328,20 @@ class container_post(Resource):
         else:
             return jsonify(type='danger', msg='command did not complete')
 
+class host_stats_get(Resource):
+  def get(self):
+    try:
+      system_time = datetime.now()
+      host_stats = {
+        "cpu_usage": psutil.cpu_percent(),
+        "mem_usage": psutil.virtual_memory().percent,
+        "uptime": time.time() - psutil.boot_time(),
+        "system_time": system_time.strftime("%d.%m.%Y %H:%M:%S")
+      }
+      return host_stats
+    except Exception as e:
+      return jsonify(type='danger', msg=str(e))
+
 def exec_cmd_container(container, cmd, user, timeout=2, shell_cmd="/bin/bash"):
 
   def recv_socket_data(c_socket, timeout):
@@ -406,6 +422,7 @@ def startFlaskAPI():
 api.add_resource(containers_get, '/containers/json')
 api.add_resource(container_get,  '/containers/<string:container_id>/json')
 api.add_resource(container_post, '/containers/<string:container_id>/<string:post_action>')
+api.add_resource(host_stats_get, '/host/stats')
 
 if __name__ == '__main__':
   api_thread = Thread(target=startFlaskAPI)
