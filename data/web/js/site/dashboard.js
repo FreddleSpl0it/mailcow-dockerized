@@ -8,10 +8,6 @@ jQuery(function($){
 function check_update(current_version, github_repo_url){
   var github_account = github_repo_url.split("/")[3];
   var github_repo_name = github_repo_url.split("/")[4];
-  console.log("Version: " + current_version);
-  console.log("Repo URL: " + github_repo_url);
-  console.log("Repo Name: " + github_repo_name);
-  console.log("Github Account: " + github_account);
 
   // get details about latest release
   window.fetch("https://api.github.com/repos/"+github_account+"/"+github_repo_name+"/releases/latest", {method:'GET',cache:'no-cache'}).then(function(response) {
@@ -54,8 +50,6 @@ function update_stats(){
   window.fetch("/api/v1/get/status/host", {method:'GET',cache:'no-cache'}).then(function(response) {
     return response.json();
   }).then(function(data) {
-    console.log(data);
-
     $("#host_date").text(data.system_time);
     $("#host_uptime").text(formatUptime(data.uptime));
     $("#host_cpu_usage").text(parseInt(data.cpu_usage).toString() + "%");
@@ -67,18 +61,4 @@ function update_stats(){
     // run again in n seconds
     setTimeout(update_stats, 5000);
   });
-}
-// format hosts uptime seconds to readable string
-function formatUptime(seconds){
-  seconds = Number(seconds);
-  var d = Math.floor(seconds / (3600*24));
-  var h = Math.floor(seconds % (3600*24) / 3600);
-  var m = Math.floor(seconds % 3600 / 60);
-  var s = Math.floor(seconds % 60);
-  
-  var dFormat = d > 0 ? d + "D " : "";
-  var hFormat = h > 0 ? h + "H " : "";
-  var mFormat = m > 0 ? m + "M " : "";
-  var sFormat = s > 0 ? s + "S" : "";
-  return dFormat + hFormat + mFormat + sFormat;
 }
