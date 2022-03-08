@@ -17,30 +17,40 @@
                 <tr>
                   <td>Version</td>
                   <td><div>
-                    <p><b>2022-01a</b></p>
-                    <p class="text-success"><b>The System is on the latest version</b></p> 
+                    <p><b>{{ mailcow_info.version_tag }}</b></p>
+                    <p id="mailcow_update"></p> 
                   </div></td>
                 </tr>
                 <tr>
                   <td>Changelog</td>
-                  <td>N/A</td>
-                </tr>
-                <tr>
-                  <td>Uptime</td>
-                  <td>N/A</td>
+                  <td><a href="{{ mailcow_info.git_project_url }}/releases/tag/{{ mailcow_info.version_tag }}" target="_blank">
+                    {{ mailcow_info.git_project_url }}/releases/tag/{{ mailcow_info.version_tag }}
+                  </a></td>
                 </tr>
                 <tr>
                   <td>Current Date/Time</td>
-                  <td>N/A</td>
+                  <td id="host_date">N/A</td>
+                </tr>
+                <tr>
+                  <td>Uptime</td>
+                  <td id="host_uptime">N/A</td>
+                </tr>
+                <tr>
+                  <td>CPU Usage</td>
+                  <td id="host_cpu_usage">N/A</td>
+                </tr>
+                <tr>
+                  <td>Memory Usage</td>
+                  <td id="host_memory_usage">N/A</td>
                 </tr>
                 <tr>
                   <td>{{ lang.dashboard.disk_usage }}</td>
                   <td>
                     <div class="progress" style="margin-bottom: 0 !important;">
-                      <div class="progress-bar progress-bar-info" role="progressbar" style="width:{{ vmail_df[4] }}"></div>
+                      <div class="progress-bar progress-bar-info vmail-progress" role="progressbar" style="width:0%"></div>
                     </div>
-                    <p><i class="bi bi-hdd-fill"></i> {{ vmail_df[0] }}</p>
-                    <p>{{ vmail_df[2] }} / {{ vmail_df[1] }} ({{ vmail_df[4] }})</p>
+                    <p><i class="bi bi-hdd-fill"></i><span class="vmail-path"> /</span></p>
+                    <p class="vmail-details">0 / 0 (0)</p>
                   </td>
                 </tr>
               </tbody>
@@ -118,5 +128,7 @@
     var lang = {{ lang_dashboard|raw }};
     var csrf_token = '{{ csrf_token }}';
     var pagination_size = '{{ pagination_size }}';
+    var mailcow_version = '{{ mailcow_info.version_tag }}';
+    var mailcow_repo_url = '{{ mailcow_info.git_project_url }}';
   </script>
 {% endblock %}
