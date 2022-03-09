@@ -152,6 +152,7 @@ services:
         - API_ALLOW_FROM=${API_ALLOW_FROM:-invalid}
         - COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-mailcow-dockerized}
         - SKIP_XAPIAN=${SKIP_XAPIAN:-y}
+        - XAPIAN_HEAP=${XAPIAN_HEAP}
         - SKIP_CLAMD=${SKIP_CLAMD:-n}
         - SKIP_SOGO=${SKIP_SOGO:-n}
         - ALLOW_ADMIN_EMAIL_LOGIN=${ALLOW_ADMIN_EMAIL_LOGIN:-n}
