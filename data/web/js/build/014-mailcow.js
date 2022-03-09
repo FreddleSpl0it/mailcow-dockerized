@@ -273,6 +273,9 @@ $(document).ready(function() {
         }
       }
   });
+
+  // format seconds into human readable string format
+  function formatUptime(o){o=Number(o);var r=Math.floor(o/86400),t=Math.floor(o%86400/3600),a=Math.floor(o%3600/60),f=Math.floor(o%60);return(r>0?r+"D ":"")+(t>0?t+"H ":"")+(a>0?a+"M ":"")+(f>0?f+"S":"")}
 });
 
 
