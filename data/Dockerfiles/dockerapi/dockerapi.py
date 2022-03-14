@@ -333,8 +333,15 @@ class host_stats_get(Resource):
     try:
       system_time = datetime.now()
       host_stats = {
-        "cpu_usage": psutil.cpu_percent(),
-        "mem_usage": psutil.virtual_memory().percent,
+        "cpu": {
+          "cores": psutil.cpu_count(),
+          "usage": psutil.cpu_percent()
+        },
+        "memory": {
+          "total": psutil.virtual_memory().total,
+          "usage": psutil.virtual_memory().percent,
+          "swap": psutil.swap_memory()
+        },
         "uptime": time.time() - psutil.boot_time(),
         "system_time": system_time.strftime("%d.%m.%Y %H:%M:%S")
       }

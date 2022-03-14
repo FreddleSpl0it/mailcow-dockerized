@@ -10,9 +10,6 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/inc/header.inc.php';
 $_SESSION['return_to'] = $_SERVER['REQUEST_URI'];
 
 
-$solr_status = (preg_match("/^([yY][eE][sS]|[yY])+$/", $_ENV["SKIP_SOLR"])) ? false : solr_status();
-
-
 $js_minifier->add('/web/js/site/dashboard.js');
 
 
@@ -26,14 +23,13 @@ $allow_admin_email_login_status = (getenv('ALLOW_ADMIN_EMAIL_LOGIN') != 'n' ? 'D
 
 $template = 'dashboard.twig';
 $template_data = [
-  'solr_status' => $solr_status,
-  'solr_uptime' => round($solr_status['status']['dovecot-fts']['uptime'] / 1000 / 60 / 60),
   'lang_dashboard' => json_encode($lang['dashboard']),
   'hostname' => $hostname,
   'timezone' => $timezone,
   'skip_clamd_status' => $skip_clamd_status,
   'skip_sogo_status' => $skip_sogo_status,
   'skip_xapian_status' => $skip_xapian_status,
+  'xapian_heap' => getenv('XAPIAN_HEAP'),
   'allow_admin_email_login_status' => $allow_admin_email_login_status,
 ];
 

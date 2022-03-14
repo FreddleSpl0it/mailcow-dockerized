@@ -50,10 +50,11 @@ function update_stats(){
   window.fetch("/api/v1/get/status/host", {method:'GET',cache:'no-cache'}).then(function(response) {
     return response.json();
   }).then(function(data) {
+    console.log(data);
     $("#host_date").text(data.system_time);
     $("#host_uptime").text(formatUptime(data.uptime));
-    $("#host_cpu_usage").text(parseInt(data.cpu_usage).toString() + "%");
-    $("#host_memory_usage").text(parseInt(data.mem_usage).toString() + "%");
+    $("#host_cpu_usage").text(parseInt(data.cpu.usage).toString() + "%");
+    $("#host_memory_usage").text(parseInt(data.memory.usage).toString() + "%");
     $(".vmail-progress").css('width', data.vmail.used_percent);
     $(".vmail-path").text(data.vmail.disk);
     $(".vmail-details").text(data.vmail.used + " / " + data.vmail.total + " (" + data.vmail.used_percent + ")");
