@@ -53,7 +53,9 @@ function update_stats(){
     console.log(data);
     $("#host_date").text(data.system_time);
     $("#host_uptime").text(formatUptime(data.uptime));
+    $("#host_cpu_cores").text(data.cpu.cores);
     $("#host_cpu_usage").text(parseInt(data.cpu.usage).toString() + "%");
+    $("#host_memory_total").text((data.memory.total / (1024 ** 3)).toFixed(2).toString() + "GB");
     $("#host_memory_usage").text(parseInt(data.memory.usage).toString() + "%");
     $(".vmail-progress").css('width', data.vmail.used_percent);
     $(".vmail-path").text(data.vmail.disk);
