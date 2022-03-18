@@ -371,6 +371,31 @@ if (isset($_GET['query'])) {
           echo json_encode($return);
         break;
       }
+      if (isset($_SESSION['mailcow_cc_role'])) {
+        switch ($category) {
+          case "fts":
+            if ($_SESSION['mailcow_cc_role'] == "admin") {
+              switch ($object) {
+                case "full-rescan":
+                  $exec_fields_full_rescan = array('cmd' => 'system', 'task' => 'fts_rescan', 'all' => True);
+                  $res = array(
+                    "api_res" => json_decode(docker('post', 'dovecot-mailcow', 'exec', $exec_fields_full_rescan), true),
+                    "redis_res" => $redis->Get("fts_full_reindex_status")
+                  );
+                  echo json_encode($res);
+                break;
+              }
+            }
+          break;
+          default:
+            http_response_code(404);
+            echo json_encode(array(
+              'type' => 'error',
+              'msg' => 'route not found'
+            ));
+            exit();
+        }
+      }
     break;
     case "get":
       function process_get_return($data, $object = true) {
@@ -1474,6 +1499,7 @@ if (isset($_GET['query'])) {
                 break;
                 case "host":
                   $stats = docker("host_stats");
+                  $volumes_df = docker("volumes_df");
                   
                   $exec_fields_vmail = array('cmd' => 'system', 'task' => 'df', 'dir' => '/var/vmail');
                   $vmail_df = explode(',', json_decode(docker('post', 'dovecot-mailcow', 'exec', $exec_fields_vmail), true));
@@ -1484,6 +1510,7 @@ if (isset($_GET['query'])) {
                     'total'=> $vmail_df[1],
                     'used_percent' => $vmail_df[4]
                   );
+                  $stats["volumes_df"] = $volumes_df;
                   
                   echo json_encode($stats);
                 break;

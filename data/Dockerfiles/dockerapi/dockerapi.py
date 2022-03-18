@@ -8,6 +8,7 @@ from flask import request
 from threading import Thread
 from datetime import datetime
 import docker
+import redis
 import uuid
 import signal
 import time
@@ -20,6 +21,10 @@ import subprocess
 import traceback
 import psutil
 
+if 'REDIS_SLAVEOF_IP' in os.environ:
+  redis_client = redis.Redis(host=os.environ['REDIS_SLAVEOF_IP'], port=os.environ['REDIS_SLAVEOF_PORT'], db=0)
+else:
+  redis_client = redis.Redis(host='redis-mailcow', port=6379, db=0)
 docker_client = docker.DockerClient(base_url='unix://var/run/docker.sock', version='auto')
 app = Flask(__name__)
 api = Api(app)
@@ -208,12 +213,19 @@ class container_post(Resource):
           return jsonify(type='warning', msg='fts_rescan error')
 
     if 'all' in request.json:
-      for container in docker_client.containers.list(filters={"id": container_id}):
-        rescan_return = container.exec_run(["/bin/bash", "-c", "/usr/bin/doveadm fts rescan -A"], user='vmail')
-        if rescan_return.exit_code == 0:
-          return jsonify(type='success', msg='fts_rescan: rescan triggered')
-        else:
-          return jsonify(type='warning', msg='fts_rescan error')
+      # long running task, use redis for feedback
+      fts_full_reindex_status = redis_client.get('fts_full_reindex_status')
+      print("Redis state: ")
+      print(fts_full_reindex_status)
+      if fts_full_reindex_status is None or fts_full_reindex_status == 'false':
+        # no reindex running     
+        redis_client.set('fts_full_reindex_status', 'true') 
+        Thread(target=run_fts_reindex(container_id)).start()
+        return jsonify(type='success', msg='fts_rescan: rescan triggered')
+      else:
+        # a reindex is already running
+        return jsonify(type='danger', msg='reindex in progress')
+
 
 
   # api call: container_post - post_action: exec - cmd: system - task: df
@@ -259,7 +271,6 @@ class container_post(Resource):
       reload_return = container.exec_run(["/bin/bash", "-c", "/usr/sbin/dovecot reload"])
       return exec_run_handler('generic', reload_return)
 
-
   # api call: container_post - post_action: exec - cmd: reload - task: postfix
   def container_post__exec__reload__postfix(self, container_id):
     for container in docker_client.containers.list(filters={"id": container_id}):
@@ -301,7 +312,6 @@ class container_post(Resource):
         return exec_run_handler('generic', maildir_cleanup)
 
 
-
   # api call: container_post - post_action: exec - cmd: rspamd - task: worker_password
   def container_post__exec__rspamd__worker_password(self, container_id):
     if 'raw' in request.json:
@@ -327,6 +337,26 @@ class container_post(Resource):
             return jsonify(type='success', msg='command completed successfully')
         else:
             return jsonify(type='danger', msg='command did not complete')
+
+class container_stats_get(Resource):
+  def get(self, container_name):
+    try:
+      for container in docker_client.containers.list(all=True, filters={"name": container_name}):
+        return container.stats(decode=None, stream = False)
+    except Exception as e:
+        return jsonify(type='danger', msg=str(e))
+
+class volumes_df_get(Resource):
+  def get(self):
+    volumes = {}
+    try:
+      info = docker_client.df()
+      for volume in info['Volumes']:
+        if volume['UsageData']['Size'] > 0 and 'mailcowdockerized' in volume['Name']:
+          volumes.update({volume['Name']: volume['UsageData']['Size']})
+      return volumes
+    except Exception as e:
+      return jsonify(type='danger', msg=str(e))
 
 class host_stats_get(Resource):
   def get(self):
@@ -415,6 +445,21 @@ def create_self_signed_cert():
     )
     process.wait()
 
+def run_fts_reindex(container_id):  
+  for container in docker_client.containers.list(filters={"id": container_id}):
+    rescan_return = container.exec_run(["/bin/bash", "-c", "/usr/bin/doveadm fts rescan -A"], user='vmail')
+
+    # reindex complete, set redis
+    system_time = datetime.now()
+    redis_client.set('fts_full_reindex_status', 'false')
+    print("fts scan completed")
+    if rescan_return.exit_code == 0:
+      redis_client.set('fts_full_reindex_last', system_time.strftime("%d.%m.%Y %H:%M:%S"))
+      redis_client.set('fts_full_reindex_msg', 'fts_rescan: success')
+    else:
+      redis_client.set('fts_full_reindex_last', system_time.strftime("%d.%m.%Y %H:%M:%S"))
+      redis_client.set('fts_full_reindex_msg', 'fts_rescan: error')
+
 def startFlaskAPI():
   create_self_signed_cert()
   try:
@@ -429,6 +474,8 @@ def startFlaskAPI():
 api.add_resource(containers_get, '/containers/json')
 api.add_resource(container_get,  '/containers/<string:container_id>/json')
 api.add_resource(container_post, '/containers/<string:container_id>/<string:post_action>')
+api.add_resource(container_stats_get, '/container/<string:container_name>/stats')
+api.add_resource(volumes_df_get, '/volumes/df')
 api.add_resource(host_stats_get, '/host/stats')
 
 if __name__ == '__main__':
@@ -436,6 +483,7 @@ if __name__ == '__main__':
   api_thread.daemon = True
   api_thread.start()
   killer = GracefulKiller()
+
   while True:
     time.sleep(1)
     if killer.kill_now:

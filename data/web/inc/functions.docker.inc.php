@@ -165,5 +165,50 @@ function docker($action, $service_name = null, $attr1 = null, $attr2 = null, $ex
       }
       return false;
     break;
+    case 'container_stats':
+      if (!$service_name) return false;
+
+      curl_setopt($curl, CURLOPT_URL, 'https://dockerapi:443/container/' . $service_name . '/stats');
+      curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+      curl_setopt($curl, CURLOPT_POST, 0);
+      curl_setopt($curl, CURLOPT_TIMEOUT, $DOCKER_TIMEOUT);
+      $response = curl_exec($curl);
+      if ($response === false) {
+        $err = curl_error($curl);
+        curl_close($curl);
+        return $err;
+      }
+      else {
+        curl_close($curl);
+        $stats = json_decode($response, true);
+        return $stats;
+      }
+      return false;
+    break;
+    case 'volumes_df':
+      curl_setopt($curl, CURLOPT_URL, 'https://dockerapi:443/volumes/df');
+      curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+      curl_setopt($curl, CURLOPT_POST, 0);
+      curl_setopt($curl, CURLOPT_TIMEOUT, $DOCKER_TIMEOUT);
+      $response = curl_exec($curl);
+      if ($response === false) {
+        $err = curl_error($curl);
+        curl_close($curl);
+        return $err;
+      }
+      else {
+        curl_close($curl);
+        $response = json_decode($response, true);
+        if (!empty($response)){
+          $df = array();
+          foreach ($response as $name=>$data) {
+            $name = str_replace('mailcowdockerized_', '', $name);
+            $df[$name] = $data;
+          }
+          return $df;
+        }
+      }
+      return false;
+    break;
   }
 }

@@ -8,10 +8,16 @@
     <div class="panel-body">
       <div class="row">
         <div class="col-sm-12 col-md-4">
-          <img class="img-responsive" alt="mailcow-logo" src="{{ logo|default('/img/cow_mailcow.svg') }}" style="margin: 0 auto;">
+          <img class="img-responsive" alt="mailcow-logo" src="{{ logo|default('/img/cow_mailcow.svg') }}" style="width: 100px;">
+          <canvas id="chartDiskSpace" style="margin-top: 30px;"></canvas>
+          <div class="progress" style="margin-bottom: 0 !important;">
+            <div class="progress-bar progress-bar-info vmail-progress" role="progressbar" style="width:0%"></div>
+          </div>
+          <p><i class="bi bi-hdd-fill"></i><span class="vmail-path"> /</span></p>
+          <p class="vmail-details">0 / 0 (0)</p>
         </div>
         <div class="col-sm-12 col-md-8">
-          <div class="table-responsive" style="margin-top: 30px;">
+          <div class="table-responsive" style="margin-top: 10px;">
             <table class="table table-striped table-condensed">
               <tbody>
                 <tr>
@@ -57,16 +63,6 @@
                   <td>
                     Total <span id="host_memory_total">N/A</span><br />
                     Usage <span id="host_memory_usage"></span>
-                  </td>
-                </tr>
-                <tr>
-                  <td>{{ lang.dashboard.disk_usage }}</td>
-                  <td>
-                    <div class="progress" style="margin-bottom: 0 !important;">
-                      <div class="progress-bar progress-bar-info vmail-progress" role="progressbar" style="width:0%"></div>
-                    </div>
-                    <p><i class="bi bi-hdd-fill"></i><span class="vmail-path"> /</span></p>
-                    <p class="vmail-details">0 / 0 (0)</p>
                   </td>
                 </tr>
                 <tr>
@@ -119,6 +115,9 @@
               </div>
             </form>
           </div>
+        </div>
+        <div class="col-sm-12">
+          <button class="btn btn-primary" onClick="ftsRescan()">FTS Rescan</button>
         </div>
       </div>
     </div>

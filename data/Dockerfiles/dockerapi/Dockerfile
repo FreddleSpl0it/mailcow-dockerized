@@ -11,6 +11,7 @@ RUN apk add --update --no-cache python3 \
   py3-psutil \
 && pip3 install --upgrade pip \
   docker \
+  redis \
   flask \
   flask-restful
 
