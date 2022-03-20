@@ -464,6 +464,14 @@
         "value_missing": "Bitte alle Felder ausfüllen",
         "yotp_verification_failed": "Yubico OTP-Verifizierung fehlgeschlagen: %s"
     },
+    "dashboard": {
+      "disk_usage": "Festplattennutzung",
+      "last_reindex": "Letzter Reindex:",
+      "current_time": "Systemzeit",
+      "memory": "Arbeitsspeicher",
+      "timezone": "Zeitzone",
+      "uptime": "Betriebszeit"
+    },
     "debug": {
         "chart_this_server": "Chart (dieser Server)",
         "containers_info": "Container-Information",
@@ -646,11 +654,11 @@
         "hibp_check": "Gegen haveibeenpwned.com prüfen"
     },
     "header": {
-        "administration": "Server-Konfiguration",
+        "administration": "Konfiguration & Details",
         "apps": "Apps",
         "debug": "Systeminformation",
-        "mailboxes": "E-Mail-Setup",
-        "mailcow_settings": "Konfiguration",
+        "mailboxes": "E-Mail",
+        "mailboxes_settings": "Konfiguration",
         "quarantine": "Quarantäne",
         "restart_netfilter": "Netfilter neustarten",
         "restart_sogo": "SOGo neustarten",

@@ -376,11 +376,13 @@ if (isset($_GET['query'])) {
           case "fts":
             if ($_SESSION['mailcow_cc_role'] == "admin") {
               switch ($object) {
-                case "full-rescan":
-                  $exec_fields_full_rescan = array('cmd' => 'system', 'task' => 'fts_rescan', 'all' => True);
-                  $res = array(
-                    "api_res" => json_decode(docker('post', 'dovecot-mailcow', 'exec', $exec_fields_full_rescan), true),
-                    "redis_res" => $redis->Get("fts_full_reindex_status")
+                case "reindex":
+                  $exec_fields_full_reindex = array('cmd' => 'system', 'task' => 'fts_rescan', 'all' => True);
+                  $res["fts"] = array(
+                    "api_res" => json_decode(docker('post', 'dovecot-mailcow', 'exec', $exec_fields_full_reindex), true),
+                    "status" => $redis->Get("fts_full_reindex_status"),
+                    "last_scan" => $redis->Get("fts_full_reindex_last"),
+                    "last_msg" => $redis->Get("fts_full_reindex_msg")
                   );
                   echo json_encode($res);
                 break;
@@ -1511,6 +1513,11 @@ if (isset($_GET['query'])) {
                     'used_percent' => $vmail_df[4]
                   );
                   $stats["volumes_df"] = $volumes_df;
+                  $stats["fts"] = array(
+                    "status" => $redis->Get("fts_full_reindex_status"),
+                    "last_scan" => $redis->Get("fts_full_reindex_last"),
+                    "last_msg" => $redis->Get("fts_full_reindex_msg")
+                  );
                   
                   echo json_encode($stats);
                 break;

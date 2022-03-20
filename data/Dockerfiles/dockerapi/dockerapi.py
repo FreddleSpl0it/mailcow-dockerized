@@ -215,11 +215,9 @@ class container_post(Resource):
     if 'all' in request.json:
       # long running task, use redis for feedback
       fts_full_reindex_status = redis_client.get('fts_full_reindex_status')
-      print("Redis state: ")
-      print(fts_full_reindex_status)
-      if fts_full_reindex_status is None or fts_full_reindex_status == 'false':
+      if fts_full_reindex_status is None or int(fts_full_reindex_status.decode()) == 0:
         # no reindex running     
-        redis_client.set('fts_full_reindex_status', 'true') 
+        redis_client.set('fts_full_reindex_status', 1) 
         Thread(target=run_fts_reindex(container_id)).start()
         return jsonify(type='success', msg='fts_rescan: rescan triggered')
       else:
@@ -447,11 +445,11 @@ def create_self_signed_cert():
 
 def run_fts_reindex(container_id):  
   for container in docker_client.containers.list(filters={"id": container_id}):
-    rescan_return = container.exec_run(["/bin/bash", "-c", "/usr/bin/doveadm fts rescan -A"], user='vmail')
+    rescan_return = container.exec_run(["/bin/bash", "-c", "/usr/bin/doveadm index -A '*'"], user='vmail')
 
     # reindex complete, set redis
     system_time = datetime.now()
-    redis_client.set('fts_full_reindex_status', 'false')
+    redis_client.set('fts_full_reindex_status', 0)
     print("fts scan completed")
     if rescan_return.exit_code == 0:
       redis_client.set('fts_full_reindex_last', system_time.strftime("%d.%m.%Y %H:%M:%S"))

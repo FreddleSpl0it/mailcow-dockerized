@@ -466,10 +466,11 @@
     },
     "dashboard": {
       "disk_usage": "Disk usage",
-      "docs": "Docs",
-      "jvm_memory_solr": "JVM memory usage",
-      "solr_dead": "Solr is starting, disabled or died.",
-      "solr_status": "Solr status"
+      "last_reindex": "Last Reindex:",
+      "current_time": "System Time",
+      "memory": "Memory",
+      "timezone": "Timezone",
+      "uptime": "Uptime"
     },
     "debug": {
         "chart_this_server": "Chart (this server)",

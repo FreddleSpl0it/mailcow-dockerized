@@ -40,51 +40,43 @@
                   </a></td>
                 </tr>
                 <tr>
-                  <td>Current Date/Time</td>
-                  <td id="host_date">N/A</td>
+                  <td>{{ lang.dashboard.current_time }}</td>
+                  <td id="host_date">-</td>
                 </tr>
                 <tr>
-                  <td>Timezone</td>
+                  <td>{{ lang.dashboard.timezone }}</td>
                   <td>{{ timezone }}</td>
                 </tr>
                 <tr>
-                  <td>Uptime</td>
-                  <td id="host_uptime">N/A</td>
+                  <td>{{ lang.dashboard.uptime }}</td>
+                  <td id="host_uptime">-</td>
                 </tr>
                 <tr>
                   <td>CPU</td>
                   <td>
-                    Cores <span id="host_cpu_cores">N/A</span><br />
+                    Cores <span id="host_cpu_cores">-</span><br />
                     Usage <span id="host_cpu_usage"></span>
                   </td>
                 </tr>
                 <tr>
-                  <td>Memory</td>
+                  <td>{{ lang.dashboard.memory }}</td>
                   <td>
-                    Total <span id="host_memory_total">N/A</span><br />
+                    Total <span id="host_memory_total">-</span><br />
                     Usage <span id="host_memory_usage"></span>
                   </td>
                 </tr>
                 <tr>
-                  <td>CLAMD</td>
-                  <td>{{ skip_clamd_status }}</td>
-                </tr>
-                <tr>
-                  <td>SOGO</td>
-                  <td>{{ skip_sogo_status }}</td>
-                </tr>
-                <tr>
-                  <td>XAPIAN</td>
-                  <td>{{ skip_xapian_status }}</td>
-                </tr>
-                <tr>
-                  <td>ALLOW_ADMIN_EMAIL_LOGIN</td>
-                  <td>{{ allow_admin_email_login_status }}</td>
+                  <td>XAPIAN FTS</td>
+                  <td>
+                    <button id="xapian_fts_reindex_btn" class="btn btn-primary" onClick="ftsReindex()"><i id="xapian_fts_reindex_icon" class="bi bi-arrow-repeat"></i> Reindex</button>
+                    <p><small><i>{{ lang.dashboard.last_reindex }} <span id="xapian_last_fts_reindex">-</span></i></small></p>
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
+
         <div class="col-sm-12">
           <legend style="margin-top:40px">{{ lang.admin.guid_and_license }}</legend>
           <div>
@@ -115,30 +107,6 @@
               </div>
             </form>
           </div>
-        </div>
-        <div class="col-sm-12">
-          <button class="btn btn-primary" onClick="ftsRescan()">FTS Rescan</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="panel panel-default">
-    <div class="panel-heading">
-      <h3 class="panel-title">{{ lang.dashboard.xapian_status }}</h3>
-    </div>
-    <div class="panel-body">
-      <div class="row">
-        <div class="col-sm-3">
-          <p><img class="img-responsive" alt="Dovecot Logo" width="128px" src="img/dovecot_logo.png" /></p>
-          <p><img class="img-responsive" alt="Xapian Logo" width="128px" src="img/xapian_logo.png" /></p>
-        </div>
-        <div class="col-sm-9">
-          {% if xapian_status != false %}
-          
-          {% else %}
-            <p>{{ lang.dashboard.xapian_dead }}</p>
-          {% endif %}
         </div>
       </div>
     </div>

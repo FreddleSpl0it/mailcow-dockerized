@@ -36,8 +36,8 @@
           <ul class="dropdown-menu" role="menu">
             {% if mailcow_cc_role == 'admin' %}
             <li {% if is_uri('dashboard') %}class="active"{% endif %}><a href="/dashboard">{{ lang.header.dashboard }}</a></li>
-            <li {% if is_uri('admin') %}class="active"{% endif %}><a href="/admin">{{ lang.header.administration }}</a></li>
             <li {% if is_uri('debug') %}class="active"{% endif %}><a href="/debug">{{ lang.header.debug }}</a></li>
+            <li {% if is_uri('admin') %}class="active"{% endif %}><a href="/admin">{{ lang.header.administration }}</a></li>
             <li><a href data-toggle="modal" data-container="sogo-mailcow" data-target="#RestartContainer">{{ lang.header.restart_sogo }}</a></li>
             {% endif %}
             {% if mailcow_cc_role != 'admin' %}
